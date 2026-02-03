@@ -19,4 +19,9 @@ app.use('/api/tenants', tenantRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Rently backend listening on ${port}`));
+
+if (require.main === module) {
+  app.listen(port, () => console.log(`Rently backend listening on ${port}`));
+}
+
+module.exports = app;
