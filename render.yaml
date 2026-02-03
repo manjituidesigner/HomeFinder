@@ -9,7 +9,19 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MONGO_URI
+      - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_VERIFY_SERVICE_SID
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false
