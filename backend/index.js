@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
 require('./config/database');
 // require('./config/firebase'); // Initialize Firebase - commented out as not configured
@@ -44,6 +45,19 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/tenants', tenantRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health/db', (req, res) => {
+  const state = mongoose.connection.readyState;
+  const stateLabel =
+    state === 1 ? 'connected' : state === 2 ? 'connecting' : state === 0 ? 'disconnected' : 'unknown';
+  res.json({ status: 'ok', db: { state, stateLabel } });
+});
+
+// Central error handler
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const status = err.status || 500;
+  res.status(status).json({ error: err.message || 'Server error' });
+});
 
 const basePort = Number(process.env.PORT) || 3000;
 

@@ -1,16 +1,34 @@
 // Property controller
+const mongoose = require('mongoose');
 const Property = require('../models/Property');
 const { uploadImage } = require('../services/imageService');
 const fs = require('fs');
 const path = require('path');
 
+const ensureDbConnected = (res) => {
+  if (mongoose.connection.readyState !== 1) {
+    res.status(503).json({
+      error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
+    });
+    return false;
+  }
+  return true;
+};
+
 exports.getProperties = async (req, res) => {
-  const properties = await Property.find();
-  res.json(properties);
+  try {
+    if (!ensureDbConnected(res)) return;
+    const properties = await Property.find();
+    res.json(properties);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    res.status(500).json({ error: 'Failed to fetch properties' });
+  }
 };
 
 exports.createProperty = async (req, res) => {
   try {
+    if (!ensureDbConnected(res)) return;
     const propertyData = req.body;
     let imageUrls = [];
 
@@ -44,11 +62,23 @@ exports.createProperty = async (req, res) => {
 };
 
 exports.updateProperty = async (req, res) => {
-  const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(property);
+  try {
+    if (!ensureDbConnected(res)) return;
+    const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(property);
+  } catch (error) {
+    console.error('Error updating property:', error);
+    res.status(500).json({ error: 'Failed to update property' });
+  }
 };
 
 exports.deleteProperty = async (req, res) => {
-  await Property.findByIdAndDelete(req.params.id);
-  res.status(204).send();
+  try {
+    if (!ensureDbConnected(res)) return;
+    await Property.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting property:', error);
+    res.status(500).json({ error: 'Failed to delete property' });
+  }
 };
