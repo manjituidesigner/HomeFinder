@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 require('./config/database');
 // require('./config/firebase'); // Initialize Firebase - commented out as not configured
 
@@ -20,6 +21,7 @@ const defaultDevOrigins = [
   'http://127.0.0.1:19006',
   'http://localhost:8081',
   'http://127.0.0.1:8081',
+  'https://rently-frontend-theta.vercel.app',
 ];
 
 const allowedOrigins = [...new Set([...envOrigins, ...defaultDevOrigins])];
