@@ -82,6 +82,10 @@ exports.signupInitiate = async (req, res) => {
       return res.status(400).json({ error: 'Either email or phone is required' });
     }
 
+    if (otpMode === 'both') {
+      return res.status(400).json({ error: 'Choose either email or phone for password recovery' });
+    }
+
     let normalizedPhone;
     if (otpMode === 'sms' || otpMode === 'both') {
       if (!normalizedPhoneRaw) {
@@ -325,10 +329,10 @@ exports.forgotPasswordVerifyOTP = async (req, res) => {
     }
 
     if (otpMode === 'both') {
-      if (!otpEmail || !otpSms) {
-        return res.status(400).json({ error: 'Both email OTP and SMS OTP are required' });
-      }
-    } else if (otpMode === 'email') {
+      return res.status(400).json({ error: 'Choose either email or phone for password recovery' });
+    }
+
+    if (otpMode === 'email') {
       if (!(otpEmail || otp)) {
         return res.status(400).json({ error: 'OTP is required' });
       }

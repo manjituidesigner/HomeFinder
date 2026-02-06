@@ -16,8 +16,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   const handleSendOTP = async () => {
-    const wantsPhone = selectedMethod === 'phone' || selectedMethod === 'both';
-    const wantsEmail = selectedMethod === 'email' || selectedMethod === 'both';
+    const wantsPhone = selectedMethod === 'phone';
+    const wantsEmail = selectedMethod === 'email';
 
     if (!wantsPhone && !wantsEmail) {
       Alert.alert('Error', 'Please select a recovery method');
@@ -39,7 +39,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     const payload = {
       ...(wantsPhone ? { phone: normalizedPhone } : {}),
       ...(wantsEmail ? { email: normalizedEmail } : {}),
-      otpVia: selectedMethod === 'both' ? 'both' : selectedMethod,
+      otpVia: selectedMethod,
     };
     try {
       const res = await forgotPasswordInitiate(payload);
@@ -136,47 +136,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.card, selectedMethod === 'both' && styles.activeCard]}
-            onPress={() => setSelectedMethod('both')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="mark-email-read" size={28} color="#8B5CF6" />
-              </View>
-              <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Both</Text>
-                <Text style={styles.cardDesc}>Email + SMS verification</Text>
-              </View>
-              <View style={[styles.radio, selectedMethod === 'both' && styles.radioActive]}>
-                {selectedMethod === 'both' && <View style={styles.radioInner} />}
-              </View>
-            </View>
-            {selectedMethod === 'both' && (
-              <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.countryCode}>+91</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Your Phone Number"
-                    value={phoneValue}
-                    onChangeText={setPhoneValue}
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                  />
-                </View>
-                <TextInput
-                  style={[styles.input, { marginTop: 16 }]}
-                  placeholder="example@domain.com"
-                  value={emailValue}
-                  onChangeText={setEmailValue}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-            )}
-          </TouchableOpacity>
         </View>
         <Pressable style={styles.sendButton} onPress={handleSendOTP}>
           <Text style={styles.sendText}>Send OTP</Text>

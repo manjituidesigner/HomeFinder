@@ -54,7 +54,6 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
         const normalizedEmail = normalizeEmail(forgotPayload?.email);
         const basePayload = {
-          ...(forgotPayload || {}),
           ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
           ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
           otpVia,
@@ -124,7 +123,6 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
         const normalizedEmail = normalizeEmail(forgotPayload?.email);
         await forgotPasswordInitiate({
-          ...(forgotPayload || {}),
           ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
           ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
           otpVia,
