@@ -11,6 +11,15 @@ const ForgotOtpVerificationScreen = ({ navigation, route }) => {
   const otpRefs = Array.from({ length: OTP_LENGTH }, () => useRef());
 
   const { forgotPayload } = route.params || {};
+  const otpVia = forgotPayload?.otpVia;
+
+  const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+
+  const normalizePhoneForApi = (value) => {
+    const sanitized = String(value || '').trim().replace(/[^\d+]/g, '');
+    if (!sanitized) return undefined;
+    return sanitized.startsWith('+') ? sanitized : undefined;
+  };
 
   useEffect(() => {
     let interval;
@@ -42,13 +51,13 @@ const ForgotOtpVerificationScreen = ({ navigation, route }) => {
     }
     const code = otpCode.join('');
     try {
-      const normalizedPhone = String(forgotPayload?.phone || '')
-        .trim()
-        .replace(/(?!^)\+/g, '')
-        .replace(/[^\d+]/g, '');
+      const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
+      const normalizedEmail = normalizeEmail(forgotPayload?.email);
       const res = await forgotPasswordVerifyOtp({
         ...(forgotPayload || {}),
-        phone: normalizedPhone,
+        ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
+        ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
+        otpVia,
         otp: code,
       });
       navigation.navigate('ResetPassword', { email: res.email, resetToken: res.resetToken });
@@ -59,11 +68,14 @@ const ForgotOtpVerificationScreen = ({ navigation, route }) => {
 
   const resendOTP = async () => {
     try {
-      const normalizedPhone = String(forgotPayload?.phone || '')
-        .trim()
-        .replace(/(?!^)\+/g, '')
-        .replace(/[^\d+]/g, '');
-      await forgotPasswordInitiate({ ...(forgotPayload || {}), phone: normalizedPhone });
+      const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
+      const normalizedEmail = normalizeEmail(forgotPayload?.email);
+      await forgotPasswordInitiate({
+        ...(forgotPayload || {}),
+        ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
+        ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
+        otpVia,
+      });
       setTimer(45);
       Alert.alert('OTP Resent', 'A new OTP has been sent');
     } catch (error) {

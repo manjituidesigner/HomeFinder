@@ -17,6 +17,14 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   const { from, userData, forgotPayload, otpVia: otpViaParam } = route.params || {};
   const otpVia = otpViaParam || userData?.otpVia || forgotPayload?.otpVia;
 
+  const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+
+  const normalizePhoneForApi = (value) => {
+    const sanitized = String(value || '').trim().replace(/[^\d+]/g, '');
+    if (!sanitized) return undefined;
+    return sanitized.startsWith('+') ? sanitized : undefined;
+  };
+
   useEffect(() => {
     let interval;
     if (timer > 0) {
@@ -43,10 +51,12 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   const handleVerifyOTP = async () => {
     try {
       if (from === 'forgot') {
-        const normalizedPhone = String(forgotPayload?.phone || '').trim().replace(/(?!^)\+/g, '').replace(/[^\d+]/g, '');
+        const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
+        const normalizedEmail = normalizeEmail(forgotPayload?.email);
         const basePayload = {
           ...(forgotPayload || {}),
-          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
+          ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
+          ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
           otpVia,
         };
 
@@ -73,10 +83,12 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         return;
       }
 
-      const normalizedPhone = String(userData?.phone || '').trim().replace(/(?!^)\+/g, '').replace(/[^\d+]/g, '');
+      const normalizedPhone = normalizePhoneForApi(userData?.phone);
+      const normalizedEmail = normalizeEmail(userData?.email);
       const basePayload = {
         ...(userData || {}),
-        ...(normalizedPhone ? { phone: normalizedPhone } : {}),
+        ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
+        ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
         otpVia,
       };
 
@@ -109,17 +121,21 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   const resendOTP = async () => {
     try {
       if (from === 'forgot') {
-        const normalizedPhone = String(forgotPayload?.phone || '').trim().replace(/(?!^)\+/g, '').replace(/[^\d+]/g, '');
+        const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
+        const normalizedEmail = normalizeEmail(forgotPayload?.email);
         await forgotPasswordInitiate({
           ...(forgotPayload || {}),
-          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
+          ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
+          ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
           otpVia,
         });
       } else {
-        const normalizedPhone = String(userData?.phone || '').trim().replace(/(?!^)\+/g, '').replace(/[^\d+]/g, '');
+        const normalizedPhone = normalizePhoneForApi(userData?.phone);
+        const normalizedEmail = normalizeEmail(userData?.email);
         await register({
           ...(userData || {}),
-          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
+          ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
+          ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
           otpVia,
         });
       }
