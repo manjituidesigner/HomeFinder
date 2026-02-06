@@ -7,15 +7,11 @@ import { verifySignupOtp, forgotPasswordVerifyOtp, register, forgotPasswordIniti
 const OtpVerificationScreen = ({ navigation, route }) => {
   const OTP_LENGTH = 4;
   const [otpCode, setOtpCode] = useState(Array(OTP_LENGTH).fill(''));
-  const [otpEmailCode, setOtpEmailCode] = useState(Array(OTP_LENGTH).fill(''));
-  const [otpSmsCode, setOtpSmsCode] = useState(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(45);
   const otpRefs = Array.from({ length: OTP_LENGTH }, () => useRef());
-  const otpEmailRefs = Array.from({ length: OTP_LENGTH }, () => useRef());
-  const otpSmsRefs = Array.from({ length: OTP_LENGTH }, () => useRef());
 
-  const { from, userData, forgotPayload, otpVia: otpViaParam } = route.params || {};
-  const otpVia = otpViaParam || userData?.otpVia || forgotPayload?.otpVia;
+  const { from, userData, forgotPayload } = route.params || {};
+  const otpVia = 'sms';
 
   const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
@@ -52,33 +48,17 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     try {
       if (from === 'forgot') {
         const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
-        const normalizedEmail = normalizeEmail(forgotPayload?.email);
         const basePayload = {
-          ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
-          ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
+          phone: normalizedPhone,
           otpVia,
         };
-
-        if (otpVia === 'both') {
-          if (otpEmailCode.includes('') || otpSmsCode.includes('')) {
-            Alert.alert('Error', 'Please enter both OTPs');
-            return;
-          }
-          const res = await forgotPasswordVerifyOtp({
-            ...basePayload,
-            otpEmail: otpEmailCode.join(''),
-            otpSms: otpSmsCode.join(''),
-          });
-          navigation.navigate('ResetPassword', { email: res.email, resetToken: res.resetToken });
-          return;
-        }
 
         if (otpCode.includes('')) {
           Alert.alert('Error', 'Please enter the complete OTP');
           return;
         }
         const res = await forgotPasswordVerifyOtp({ ...basePayload, otp: otpCode.join('') });
-        navigation.navigate('ResetPassword', { email: res.email, resetToken: res.resetToken });
+        navigation.navigate('ResetPassword', { email: res.email, phone: res.phone, resetToken: res.resetToken });
         return;
       }
 
@@ -86,24 +66,10 @@ const OtpVerificationScreen = ({ navigation, route }) => {
       const normalizedEmail = normalizeEmail(userData?.email);
       const basePayload = {
         ...(userData || {}),
-        ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
-        ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
+        email: normalizedEmail,
+        phone: normalizedPhone,
         otpVia,
       };
-
-      if (otpVia === 'both') {
-        if (otpEmailCode.includes('') || otpSmsCode.includes('')) {
-          Alert.alert('Error', 'Please enter both OTPs');
-          return;
-        }
-        const res = await verifySignupOtp({
-          ...basePayload,
-          otpEmail: otpEmailCode.join(''),
-          otpSms: otpSmsCode.join(''),
-        });
-        navigation.navigate('Success', { user: res.user, token: res.token });
-        return;
-      }
 
       if (otpCode.includes('')) {
         Alert.alert('Error', 'Please enter the complete OTP');
@@ -121,10 +87,8 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     try {
       if (from === 'forgot') {
         const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
-        const normalizedEmail = normalizeEmail(forgotPayload?.email);
         await forgotPasswordInitiate({
-          ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
-          ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
+          phone: normalizedPhone,
           otpVia,
         });
       } else {
@@ -132,8 +96,8 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         const normalizedEmail = normalizeEmail(userData?.email);
         await register({
           ...(userData || {}),
-          ...(otpVia === 'email' || otpVia === 'both' ? { email: normalizedEmail } : {}),
-          ...(otpVia === 'sms' || otpVia === 'both' ? { phone: normalizedPhone } : {}),
+          email: normalizedEmail,
+          phone: normalizedPhone,
           otpVia,
         });
       }
@@ -145,7 +109,6 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   };
 
   const handleKeyPress = (key) => {
-    if (otpVia === 'both') return;
     if (key === 'backspace') {
       const next = [...otpCode];
       for (let i = next.length - 1; i >= 0; i--) {
@@ -183,58 +146,21 @@ const OtpVerificationScreen = ({ navigation, route }) => {
               : 'Sign in to manage your rental journey. Enter the code sent to you.'}
           </Text>
         </View>
-        {otpVia === 'both' ? (
-          <>
-            <Text style={styles.sectionLabel}>Email OTP</Text>
-            <View style={styles.otpInputs}>
-              {otpEmailCode.map((digit, index) => (
-                <TextInput
-                  key={`email-${index}`}
-                  ref={otpEmailRefs[index]}
-                  style={styles.otpInput}
-                  value={digit}
-                  onChangeText={(text) => handleOtpChange(setOtpEmailCode, otpEmailRefs, otpEmailCode, text, index)}
-                  onKeyPress={(e) => handleOtpKeyPress(otpEmailRefs, otpEmailCode, e, index)}
-                  keyboardType="numeric"
-                  maxLength={1}
-                  autoFocus={index === 0}
-                />
-              ))}
-            </View>
-
-            <Text style={styles.sectionLabel}>SMS OTP</Text>
-            <View style={styles.otpInputs}>
-              {otpSmsCode.map((digit, index) => (
-                <TextInput
-                  key={`sms-${index}`}
-                  ref={otpSmsRefs[index]}
-                  style={styles.otpInput}
-                  value={digit}
-                  onChangeText={(text) => handleOtpChange(setOtpSmsCode, otpSmsRefs, otpSmsCode, text, index)}
-                  onKeyPress={(e) => handleOtpKeyPress(otpSmsRefs, otpSmsCode, e, index)}
-                  keyboardType="numeric"
-                  maxLength={1}
-                />
-              ))}
-            </View>
-          </>
-        ) : (
-          <View style={styles.otpInputs}>
-            {otpCode.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={otpRefs[index]}
-                style={styles.otpInput}
-                value={digit}
-                onChangeText={(text) => handleOtpChange(setOtpCode, otpRefs, otpCode, text, index)}
-                onKeyPress={(e) => handleOtpKeyPress(otpRefs, otpCode, e, index)}
-                keyboardType="numeric"
-                maxLength={1}
-                autoFocus={index === 0}
-              />
-            ))}
-          </View>
-        )}
+        <View style={styles.otpInputs}>
+          {otpCode.map((digit, index) => (
+            <TextInput
+              key={index}
+              ref={otpRefs[index]}
+              style={styles.otpInput}
+              value={digit}
+              onChangeText={(text) => handleOtpChange(setOtpCode, otpRefs, otpCode, text, index)}
+              onKeyPress={(e) => handleOtpKeyPress(otpRefs, otpCode, e, index)}
+              keyboardType="numeric"
+              maxLength={1}
+              autoFocus={index === 0}
+            />
+          ))}
+        </View>
         <View style={styles.footer}>
           <Text style={styles.resendText}>Didn't receive the code?</Text>
           <TouchableOpacity onPress={resendOTP} disabled={timer > 0}>

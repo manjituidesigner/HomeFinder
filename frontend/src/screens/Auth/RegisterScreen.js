@@ -25,8 +25,8 @@ const RegisterScreen = ({ navigation }) => {
   const handleNext = () => {
     if (step === 1) {
       // Validate step 1
-      if (!formData.name || (!formData.phone && !formData.email) || !formData.pin) {
-        Alert.alert('Error', 'Please fill all fields');
+      if (!formData.name || !formData.phone || !formData.pin) {
+        Alert.alert('Error', 'Please enter your name, phone, and PIN');
         return;
       }
 
@@ -56,8 +56,8 @@ const RegisterScreen = ({ navigation }) => {
       const hasEmail = trimmedEmail.length > 0;
       const hasPhone = String(formData.phone || '').trim().length > 0;
 
-      if (!hasEmail && !hasPhone) {
-        Alert.alert('Error', 'Please enter either Email or Phone Number');
+      if (!hasPhone) {
+        Alert.alert('Error', 'Please enter your phone number');
         return;
       }
 
@@ -73,6 +73,7 @@ const RegisterScreen = ({ navigation }) => {
         email: hasEmail ? trimmedEmail : undefined,
         phone: hasPhone ? combinedPhone : undefined,
         password: formData.pin,
+        otpVia: 'sms',
       };
 
       const res = await register(userData);

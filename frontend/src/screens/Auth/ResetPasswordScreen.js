@@ -8,7 +8,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const { email, resetToken } = route.params || {};
+  const { email, phone, resetToken } = route.params || {};
 
   const handleReset = async () => {
     if (!password || !confirmPassword) {
@@ -20,13 +20,13 @@ const ResetPasswordScreen = ({ navigation, route }) => {
       return;
     }
 
-    if (!email || !resetToken) {
+    if (!resetToken || (!email && !phone)) {
       Alert.alert('Error', 'Missing reset session. Please restart the forgot password flow.');
       return;
     }
 
     try {
-      await resetPassword({ email, newPassword: password, resetToken });
+      await resetPassword({ email, phone, newPassword: password, resetToken });
       Alert.alert('Success', 'Password reset successfully');
       navigation.navigate('Login');
     } catch (error) {

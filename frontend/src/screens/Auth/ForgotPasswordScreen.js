@@ -5,9 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { forgotPasswordInitiate } from '../../services/authService';
 
 const ForgotPasswordScreen = ({ navigation }) => {
-  const [selectedMethod, setSelectedMethod] = useState('phone');
   const [phoneValue, setPhoneValue] = useState('');
-  const [emailValue, setEmailValue] = useState('');
 
   const normalizeIndianPhone = (localNumber) => {
     const digits = String(localNumber || '').replace(/\D/g, '');
@@ -16,39 +14,25 @@ const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   const handleSendOTP = async () => {
-    const wantsPhone = selectedMethod === 'phone';
-    const wantsEmail = selectedMethod === 'email';
+    const normalizedPhone = normalizeIndianPhone(phoneValue);
 
-    if (!wantsPhone && !wantsEmail) {
-      Alert.alert('Error', 'Please select a recovery method');
-      return;
-    }
-
-    const normalizedPhone = wantsPhone ? normalizeIndianPhone(phoneValue) : undefined;
-    const normalizedEmail = String(emailValue || '').trim().toLowerCase();
-
-    if (wantsPhone && !normalizedPhone) {
+    if (!normalizedPhone) {
       Alert.alert('Error', 'Please enter your 10-digit phone number');
-      return;
-    }
-    if (wantsEmail && !normalizedEmail) {
-      Alert.alert('Error', 'Please enter your email address');
       return;
     }
 
     const payload = {
-      ...(wantsPhone ? { phone: normalizedPhone } : {}),
-      ...(wantsEmail ? { email: normalizedEmail } : {}),
-      otpVia: selectedMethod,
+      phone: normalizedPhone,
+      otpVia: 'sms',
     };
     try {
       const res = await forgotPasswordInitiate(payload);
       navigation.navigate('OtpVerification', {
         from: 'forgot',
         forgotPayload: {
-          email: res?.email || normalizedEmail,
+          email: res?.email,
           phone: res?.phone || normalizedPhone,
-          otpVia: res?.otpVia || payload.otpVia,
+          otpVia: 'sms',
         },
       });
     } catch (error) {
@@ -68,13 +52,12 @@ const ForgotPasswordScreen = ({ navigation }) => {
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Forgot{'\n'}Password</Text>
           <Text style={styles.subtitle}>
-            Choose a recovery method to receive your security code.
+            Enter your phone number to receive your security code.
           </Text>
         </View>
         <View style={styles.cards}>
           <TouchableOpacity
-            style={[styles.card, selectedMethod === 'phone' && styles.activeCard]}
-            onPress={() => setSelectedMethod('phone')}
+            style={[styles.card, styles.activeCard]}
             activeOpacity={0.7}
           >
             <View style={styles.cardContent}>
@@ -86,56 +69,23 @@ const ForgotPasswordScreen = ({ navigation }) => {
                 <Text style={styles.cardDesc}>SMS verification</Text>
               </View>
               <View style={[styles.radio, selectedMethod === 'phone' && styles.radioActive]}>
-                {selectedMethod === 'phone' && <View style={styles.radioInner} />}
+                <View style={styles.radioInner} />
               </View>
             </View>
-            {selectedMethod === 'phone' && (
-              <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.countryCode}>+91</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Your Phone Number"
-                    value={phoneValue}
-                    onChangeText={setPhoneValue}
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                  />
-                </View>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.card, selectedMethod === 'email' && styles.activeCard]}
-            onPress={() => setSelectedMethod('email')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.cardContent}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="alternate-email" size={28} color="#8B5CF6" />
-              </View>
-              <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>Email Address</Text>
-                <Text style={styles.cardDesc}>Link to your inbox</Text>
-              </View>
-              <View style={[styles.radio, selectedMethod === 'email' && styles.radioActive]}>
-                {selectedMethod === 'email' && <View style={styles.radioInner} />}
-              </View>
-            </View>
-            {selectedMethod === 'email' && (
-              <View style={styles.inputContainer}>
+            <View style={styles.inputContainer}>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.countryCode}>+91</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="example@domain.com"
-                  value={emailValue}
-                  onChangeText={setEmailValue}
-                  keyboardType="email-address"
-                  autoFocus
+                  placeholder="Enter Your Phone Number"
+                  value={phoneValue}
+                  onChangeText={setPhoneValue}
+                  keyboardType="phone-pad"
+                  maxLength={10}
                 />
               </View>
-            )}
+            </View>
           </TouchableOpacity>
-
         </View>
         <Pressable style={styles.sendButton} onPress={handleSendOTP}>
           <Text style={styles.sendText}>Send OTP</Text>
