@@ -68,7 +68,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                 <Text style={styles.cardTitle}>Phone Number</Text>
                 <Text style={styles.cardDesc}>SMS verification</Text>
               </View>
-              <View style={[styles.radio, selectedMethod === 'phone' && styles.radioActive]}>
+              <View style={[styles.radio, styles.radioActive]}>
                 <View style={styles.radioInner} />
               </View>
             </View>
