@@ -1,7 +1,8 @@
-// Auth token storage with optional Expo SecureStore
+// Auth token storage with optional Expo SecureStore + web localStorage fallback
 
 let cachedToken = null;
 const listeners = new Set();
+const TOKEN_KEY = 'auth_token';
 
 const tryGetSecureStore = () => {
   try {
@@ -12,7 +13,16 @@ const tryGetSecureStore = () => {
   }
 };
 
-const TOKEN_KEY = 'auth_token';
+const getWebStorage = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage;
+    }
+  } catch (e) {
+    return null;
+  }
+  return null;
+};
 
 const notify = () => {
   for (const cb of listeners) {
@@ -33,15 +43,24 @@ export const getAuthToken = async () => {
   if (typeof cachedToken === 'string' && cachedToken.length > 0) return cachedToken;
 
   const SecureStore = tryGetSecureStore();
-  if (!SecureStore) return null;
+  if (SecureStore) {
+    try {
+      const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+      cachedToken = stored || null;
+      return cachedToken;
+    } catch (e) {
+      // ignore secure store errors and fall back
+    }
+  }
 
-  try {
-    const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+  const webStorage = getWebStorage();
+  if (webStorage) {
+    const stored = webStorage.getItem(TOKEN_KEY);
     cachedToken = stored || null;
     return cachedToken;
-  } catch (e) {
-    return null;
   }
+
+  return null;
 };
 
 export const setAuthToken = async (token) => {
@@ -54,6 +73,19 @@ export const setAuthToken = async (token) => {
         await SecureStore.setItemAsync(TOKEN_KEY, cachedToken);
       } else {
         await SecureStore.deleteItemAsync(TOKEN_KEY);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  const webStorage = getWebStorage();
+  if (webStorage) {
+    try {
+      if (cachedToken) {
+        webStorage.setItem(TOKEN_KEY, cachedToken);
+      } else {
+        webStorage.removeItem(TOKEN_KEY);
       }
     } catch (e) {
       // ignore
