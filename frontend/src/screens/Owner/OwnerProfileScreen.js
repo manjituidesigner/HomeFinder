@@ -1,43 +1,12 @@
-// Owner Profile Screen
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import AddressForm from './AddressForm';
 
 const OwnerProfileScreen = ({ navigation }) => {
-  const [step, setStep] = useState(1);
-  const scrollViewRef = useRef();
-  const [fullName, setFullName] = useState('');
-  const [alternatePhone, setAlternatePhone] = useState('');
-  const [streetAddress, setStreetAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [country, setCountry] = useState('');
-  const [pinCode, setPinCode] = useState('');
-  const [sameAddress, setSameAddress] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
-  const [aadharNumber, setAadharNumber] = useState('4582 9102 3341');
-  const [aadharFront, setAadharFront] = useState(null);
-  const [aadharBack, setAadharBack] = useState(null);
-  const [identityProof, setIdentityProof] = useState(null);
-  const [electricityBill, setElectricityBill] = useState(null);
-  const [familyMembers, setFamilyMembers] = useState('4');
-  const [adults, setAdults] = useState('2');
-  const [kids, setKids] = useState('2');
-  const [selectedVehicle, setSelectedVehicle] = useState('car');
-
-  const vehicles = [
-    { key: 'car', label: 'Car', icon: 'directions-car', color: ['#60a5fa', '#2563eb'] },
-    { key: 'bike', label: 'Bike', icon: 'motorcycle', color: ['#fb923c', '#dc2626'] },
-    { key: 'scooter', label: 'Scooter', icon: 'scooter', color: ['#2dd4bf', '#059669'] },
-  ];
-
-  useEffect(() => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: 0, animated: true });
-    }
-  }, [step]);
+  const [aadharNumber, setAadharNumber] = useState('');
+  const [aadharImage, setAadharImage] = useState(null);
 
   const pickImage = async (setImage) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -46,7 +15,7 @@ const OwnerProfileScreen = ({ navigation }) => {
       return;
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
@@ -64,7 +33,7 @@ const OwnerProfileScreen = ({ navigation }) => {
       return;
     }
 
-    let result = await ImagePicker.launchCameraAsync({
+    const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -75,787 +44,422 @@ const OwnerProfileScreen = ({ navigation }) => {
     }
   };
 
-  const handleNext = () => {
-    if (step < 3) {
-      setStep(step + 1);
-    }
-  };
-
   const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    } else {
-      navigation.goBack();
-    }
+    navigation.goBack();
   };
 
-  const handleComplete = () => {
-    navigation.getParent()?.navigate('Main');
+  const handleNext = () => {
     navigation.navigate('OwnerDashboard');
   };
 
-  const getProgress = () => {
-    switch (step) {
-      case 1: return { percent: 25, text: 'Step 1 of 4' };
-      case 2: return { percent: 66, text: 'Step 2 of 3' };
-      case 3: return { percent: 100, text: 'Almost there!' };
-      default: return { percent: 25, text: 'Step 1 of 4' };
-    }
-  };
-
-  const getTitle = () => {
-    switch (step) {
-      case 1: return 'Personal Identity';
-      case 2: return 'Official Documents';
-      case 3: return 'Family & Household';
-      default: return 'Personal Identity';
-    }
-  };
-
-  const getSubtitle = () => {
-    switch (step) {
-      case 1: return "Let's start with your basic information.";
-      case 2: return 'Please provide valid government IDs';
-      case 3: return 'Final step to personalize your home dashboard.';
-      default: return "Let's start with your basic information.";
-    }
-  };
-
-  const progress = getProgress();
-
   return (
-    <ScrollView ref={scrollViewRef} style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Top Navigation */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack}>
-          <MaterialIcons name="arrow-back-ios" size={24} color="#7311d4" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Owner Profile</Text>
-        <View style={{ width: 48 }} />
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressStep}>{progress.text}</Text>
-            <Text style={styles.progressPercent}>{progress.percent}% Complete</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress.percent}%` }]} />
-          </View>
-        </View>
-      </View>
-
-      {/* Headline */}
-      <View style={styles.headline}>
-        <Text style={styles.title}>{getTitle()}</Text>
-        <Text style={styles.subtitle}>{getSubtitle()}</Text>
-      </View>
-
-      {/* Step Content */}
-      {step === 1 && (
-        <>
-          {/* Profile Photo */}
-          <View style={styles.photoSection}>
-            <View style={styles.photoContainer}>
-              <Image
-                source={profileImage ? { uri: profileImage } : { uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTa1KQEVHjvbx9YJcnLr2OKI_NNtKdTzvzxFtfOTifJa11c1QTnY1SSfldK7Y2wMS-qkBp-4H-RBHQmUGZvZIZu-eKnIRpcGCZfsajR4tDDpGyCjeN6RouBx1l06nWvOtMccjcq1lUGybJsRDXI_p6ENY_DqF5HxjD1KUVuSpyEdG5ZeX4RsDjKiLsiaYgUEN2AYX_oxg70QYt0XNtCH-gqjtqV62V0PxoHQ0RXHo4e9TADGrjrEqoGDMku8iSZ6QFykrLgfdAX7s");' }}
-                style={styles.photo}
-              />
-              <TouchableOpacity style={styles.cameraIcon} onPress={pickImage}>
-                <MaterialIcons name="photo-camera" size={16} color="#FFFFFF" />
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.shell}>
+          <View style={styles.header}>
+            <View style={styles.headerRow}>
+              <TouchableOpacity style={styles.iconButton} onPress={handleBack} activeOpacity={0.8}>
+                <MaterialIcons name="arrow-back-ios" size={18} color="#18181B" />
               </TouchableOpacity>
+              <Text style={styles.headerTitle}>Identity</Text>
+              <View style={styles.iconSpacer} />
             </View>
-            <Text style={styles.photoTitle}>Profile Photo</Text>
-            <Text style={styles.photoSubtitle}>Take a selfie for instant verification</Text>
-            <View style={styles.photoButtons}>
-              <TouchableOpacity style={styles.selfieButton} onPress={takeSelfie}>
-                <MaterialIcons name="camera-alt" size={20} color="#8B5CF6" />
-                <Text style={styles.selfieText}>Take Selfie</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.galleryButton} onPress={() => pickImage(setProfileImage)}>
-                <MaterialIcons name="photo-library" size={20} color="#6B7280" />
-                <Text style={styles.galleryText}>Choose from Gallery</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
 
-          {/* Input Fields */}
-          <View style={styles.inputs}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Johnathan Doe"
-                value={fullName}
-                onChangeText={setFullName}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email (Verified)</Text>
-              <View style={styles.verifiedInput}>
-                <TextInput
-                  style={[styles.input, styles.disabledInput]}
-                  value="johndoe@example.com"
-                  editable={false}
-                />
-                <MaterialIcons name="verified" size={20} color="#10B981" />
+            <View style={styles.progressArea}>
+              <View style={styles.progressLabels}>
+                <Text style={styles.progressLabel}>Step 1 of 10</Text>
+                <Text style={styles.progressLabel}>10% Complete</Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={styles.progressFill} />
               </View>
             </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Phone Number</Text>
-              <View style={styles.verifiedInput}>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.photoWrap}>
+              <View style={styles.avatarRing}>
+                <Image
+                  source={{
+                    uri: profileImage
+                      ? profileImage
+                      : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAMQsrxjAHgXYrV5xnWUKhcqHSsYf88DdzwyyqtX1G62WGc_5Yr0h6xV7WtPOT0IUazobW1hrO-9PBvxj4k7-vg0BJKSiAqOtPvUGlFkKk5qtiq23poamOarYi1epJqGdRr3pmFf_jKNfA_2nUbqaCsKQVNa5tJ1Xu_C1rzXdQUNXmOVjMYJacKy4FiG1_k7fwq12bI1aJTFNWjXxQTWlPYFH29-NfzHlfOcWCEyCYT6u8QrovGogpUT75RqFxPifkSePhYkzxIWvAv',
+                  }}
+                  style={styles.avatar}
+                />
+              </View>
+              <TouchableOpacity style={styles.avatarEdit} onPress={() => pickImage(setProfileImage)}>
+                <MaterialIcons name="edit" size={14} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.sectionTitle}>Profile Photo</Text>
+            <Text style={styles.sectionSubtitle}>Add a professional photo for your owner profile</Text>
+            <View style={styles.photoActions}>
+              <TouchableOpacity style={styles.secondaryButton} onPress={takeSelfie} activeOpacity={0.85}>
+                <MaterialIcons name="photo-camera" size={18} color="#8B5CF6" />
+                <Text style={styles.secondaryButtonText}>Selfie</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => pickImage(setProfileImage)}
+                activeOpacity={0.85}
+              >
+                <MaterialIcons name="file-upload" size={18} color="#FFFFFF" />
+                <Text style={styles.primaryButtonText}>Upload</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons name="person" size={20} color="#8B5CF6" />
+              <Text style={styles.sectionHeaderText}>Personal Details</Text>
+            </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Full Name</Text>
+              <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[styles.input, styles.disabledInput]}
+                  style={[styles.input, styles.inputMuted]}
+                  value="Alexander Graham"
+                  editable={false}
+                />
+                <MaterialIcons name="lock" size={16} color="#A1A1AA" style={styles.inputIcon} />
+              </View>
+            </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, styles.inputMuted]}
+                  value="alexander.g@example.com"
+                  editable={false}
+                />
+                <MaterialIcons name="lock" size={16} color="#A1A1AA" style={styles.inputIcon} />
+              </View>
+            </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Mobile Number</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, styles.inputMuted]}
                   value="+1 234 567 890"
                   editable={false}
                 />
-                <MaterialIcons name="verified" size={20} color="#10B981" />
+                <MaterialIcons name="lock" size={16} color="#A1A1AA" style={styles.inputIcon} />
               </View>
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Alternate Phone</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Optional phone number"
-                value={alternatePhone}
-                onChangeText={setAlternatePhone}
-              />
             </View>
           </View>
 
-          {/* Address Section */}
-          <AddressForm
-            streetAddress={streetAddress}
-            setStreetAddress={setStreetAddress}
-            city={city}
-            setCity={setCity}
-            state={state}
-            setState={setState}
-            country={country}
-            setCountry={setCountry}
-            pinCode={pinCode}
-            setPinCode={setPinCode}
-            sameAddress={sameAddress}
-            setSameAddress={setSameAddress}
-          />
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          {/* Aadhar Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Aadhar Card Number</Text>
-            <View style={styles.inputWrapper}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons name="verified-user" size={20} color="#8B5CF6" />
+              <Text style={styles.sectionHeaderText}>Identity Verification</Text>
+            </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Aadhaar Number</Text>
               <TextInput
                 style={styles.input}
-                placeholder="0000 0000 0000"
+                placeholder="XXXX - XXXX - XXXX"
+                placeholderTextColor="#A1A1AA"
                 value={aadharNumber}
                 onChangeText={setAadharNumber}
-                keyboardType="numeric"
               />
-              <MaterialIcons name="check-circle" size={24} color="#10b981" style={styles.checkIcon} />
             </View>
-          </View>
 
-          {/* Upload Section */}
-          <View style={styles.uploadContainer}>
-            <Text style={styles.uploadTitle}>Upload Files</Text>
-            <View style={styles.uploadGrid}>
-              <TouchableOpacity style={styles.uploadBox} onPress={() => pickImage(setAadharFront)}>
-                <View style={styles.uploadIcon}>
-                  <MaterialIcons name="contacts" size={28} color="#7c3aed" />
-                </View>
-                <View>
-                  <Text style={styles.uploadText}>Aadhar Front</Text>
-                  <Text style={styles.uploadSubtext}>Upload</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.uploadBox} onPress={() => pickImage(setAadharBack)}>
-                <View style={styles.uploadIcon}>
-                  <MaterialIcons name="badge" size={28} color="#7c3aed" />
-                </View>
-                <View>
-                  <Text style={styles.uploadText}>Aadhar Back</Text>
-                  <Text style={styles.uploadSubtext}>Upload</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.uploadBox, styles.fullWidth]} onPress={() => pickImage(setIdentityProof)}>
-                <View style={styles.uploadIconLarge}>
-                  <MaterialIcons name="account-box" size={28} color="#7c3aed" />
-                </View>
-                <View style={styles.uploadContent}>
-                  <Text style={styles.uploadText}>Identity Proof</Text>
-                  <Text style={styles.uploadDesc}>Passport or Driving License</Text>
-                </View>
-                <View style={styles.uploadButton}>
-                  <MaterialIcons name="upload" size={20} color="#7c3aed" />
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.uploadBox, styles.fullWidth]} onPress={() => pickImage(setElectricityBill)}>
-                <View style={styles.uploadIconLarge}>
-                  <MaterialIcons name="receipt-long" size={28} color="#7c3aed" />
-                </View>
-                <View style={styles.uploadContent}>
-                  <Text style={styles.uploadText}>Electricity Bill</Text>
-                  <Text style={styles.uploadDesc}>Address verification proof</Text>
-                </View>
-                <View style={styles.uploadButton}>
-                  <MaterialIcons name="upload" size={20} color="#7c3aed" />
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </>
-      )}
-
-      {step === 3 && (
-        <>
-          {/* Inputs */}
-          <View style={styles.inputsContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Family Members Count</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="0"
-                  value={familyMembers}
-                  onChangeText={setFamilyMembers}
-                  keyboardType="numeric"
-                />
-                <View style={styles.inputIcon}>
-                  <MaterialIcons name="groups" size={24} color="#7c3aed" />
-                </View>
+            <TouchableOpacity
+              style={styles.uploadCard}
+              onPress={() => pickImage(setAadharImage)}
+              activeOpacity={0.85}
+            >
+              <View style={styles.uploadIcon}>
+                <MaterialIcons name="add-a-photo" size={26} color="#8B5CF6" />
               </View>
-            </View>
-            <View style={styles.rowInputs}>
-              <View style={styles.halfInputGroup}>
-                <Text style={styles.label}>Adults</Text>
-                <TextInput
-                  style={styles.input}
-                  value={adults}
-                  onChangeText={setAdults}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={styles.halfInputGroup}>
-                <Text style={styles.label}>Kids</Text>
-                <TextInput
-                  style={styles.input}
-                  value={kids}
-                  onChangeText={setKids}
-                  keyboardType="numeric"
-                />
-              </View>
-            </View>
+              <Text style={styles.uploadTitle}>Upload Aadhaar Card</Text>
+              <Text style={styles.uploadSubtitle}>Front & Back images (Max 5MB)</Text>
+              {aadharImage ? <Text style={styles.uploadStatus}>1 file added</Text> : null}
+            </TouchableOpacity>
           </View>
+        </View>
+      </ScrollView>
 
-          {/* Vehicles */}
-          <View style={styles.vehiclesContainer}>
-            <Text style={styles.vehiclesLabel}>Vehicles in your garage</Text>
-            <View style={styles.vehiclesGrid}>
-              {vehicles.map((vehicle) => (
-                <TouchableOpacity
-                  key={vehicle.key}
-                  style={[
-                    styles.vehicleButton,
-                    selectedVehicle === vehicle.key && styles.vehicleButtonActive,
-                  ]}
-                  onPress={() => setSelectedVehicle(vehicle.key)}
-                >
-                  <View style={[styles.vehicleIcon, { backgroundColor: vehicle.color[0] }]}>
-                    <MaterialIcons name={vehicle.icon} size={32} color="#ffffff" />
-                  </View>
-                  <Text style={styles.vehicleLabel}>{vehicle.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </>
-      )}
-
-      {/* Action Buttons */}
-      <View style={styles.actions}>
-        {step < 3 ? (
-          <TouchableOpacity style={styles.saveButton} onPress={handleNext} activeOpacity={0.8}>
-            <Text style={styles.saveText}>Save & Continue</Text>
-            <MaterialIcons name="arrow-forward" size={24} color="#ffffff" />
+      <View style={styles.footerWrap}>
+        <View style={styles.footerShell}>
+          <TouchableOpacity style={styles.footerButton} onPress={handleNext} activeOpacity={0.9}>
+            <Text style={styles.footerButtonText}>Next Step</Text>
+            <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-        ) : (
-          <>
-            <TouchableOpacity style={styles.completeButton} onPress={handleComplete} activeOpacity={0.8}>
-              <Text style={styles.completeText}>Complete Profile</Text>
-              <View style={styles.completeIcon}>
-                <MaterialIcons name="auto-awesome" size={20} color="#ffffff" />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.skipButton}>
-              <Text style={styles.skipText}>Skip for now</Text>
-            </TouchableOpacity>
-          </>
-        )}
+        </View>
       </View>
-
-      <View style={styles.indicator} />
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: '#F8FAFC',
   },
-  contentContainer: {
+  content: {
+    paddingBottom: 140,
+  },
+  shell: {
+    maxWidth: 480,
+    width: '100%',
+    alignSelf: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 48,
+    paddingBottom: 24,
   },
   header: {
+    paddingTop: 24,
+    paddingBottom: 12,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 24,
-    paddingBottom: 16,
+    marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#140d1b',
+    color: '#18181B',
   },
-  progressContainer: {
-    marginBottom: 32,
-  },
-  progressCard: {
+  iconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  progressHeader: {
+  iconSpacer: {
+    width: 40,
+  },
+  progressArea: {
+    gap: 8,
+  },
+  progressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
   },
-  progressStep: {
-    fontSize: 14,
+  progressLabel: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#6B7280',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: '#71717A',
   },
-  progressPercent: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#8B5CF6',
-  },
-  progressBar: {
+  progressTrack: {
     height: 6,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 3,
+    backgroundColor: '#E4E4E7',
+    borderRadius: 99,
     overflow: 'hidden',
   },
   progressFill: {
+    width: '10%',
     height: '100%',
+    borderRadius: 99,
     backgroundColor: '#8B5CF6',
-    borderRadius: 3,
   },
-  headline: {
-    marginBottom: 32,
+  section: {
+    gap: 16,
+    marginBottom: 24,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#140d1b',
-    lineHeight: 38.4,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#6B7280',
-    marginTop: 8,
-    lineHeight: 22.4,
-  },
-  photoSection: {
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    marginBottom: 32,
+    gap: 8,
   },
-  photoContainer: {
-    position: 'relative',
-    marginBottom: 16,
+  sectionHeaderText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#18181B',
   },
-  photo: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#18181B',
+    textAlign: 'center',
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: '#71717A',
+    textAlign: 'center',
+  },
+  photoWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarRing: {
     width: 128,
     height: 128,
     borderRadius: 64,
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
+    backgroundColor: '#E4E4E7',
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  cameraIcon: {
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  avatarEdit: {
     position: 'absolute',
-    bottom: 4,
     right: 4,
-    backgroundColor: '#7311d4',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    bottom: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
   },
-  photoTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#140d1b',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  photoSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  photoButtons: {
+  photoActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
     width: '100%',
-    maxWidth: 280,
   },
-  selfieButton: {
-    flexDirection: 'row',
+  primaryButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 999,
+    backgroundColor: '#8B5CF6',
     alignItems: 'center',
-    backgroundColor: '#7311d4',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#7311d4',
-    shadowOffset: { width: 0, height: 4 },
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
-    shadowRadius: 8,
+    shadowRadius: 12,
     elevation: 4,
-    flex: 1,
-    marginRight: 8,
-    justifyContent: 'center',
   },
-  selfieText: {
+  primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    marginLeft: 8,
   },
-  galleryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  secondaryButton: {
     flex: 1,
-    marginLeft: 8,
+    height: 44,
+    borderRadius: 999,
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
   },
-  galleryText: {
-    color: '#6B7280',
-    fontSize: 14,
+  secondaryButtonText: {
+    color: '#8B5CF6',
+    fontSize: 13,
     fontWeight: '700',
-    marginLeft: 8,
   },
-  inputs: {
-    marginBottom: 32,
-  },
-  inputGroup: {
-    marginBottom: 16,
+  fieldGroup: {
+    gap: 6,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#140d1b',
-    marginBottom: 8,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#52525B',
     marginLeft: 4,
-  },
-  input: {
-    height: 56,
-    paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 16,
-    fontSize: 16,
-    color: '#140d1b',
-  },
-  verifiedInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  disabledInput: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-    color: '#64748B',
-  },
-  inputContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
   },
   inputWrapper: {
     position: 'relative',
   },
-  checkIcon: {
-    position: 'absolute',
-    right: 20,
-    top: '50%',
-    transform: [{ translateY: -12 }],
-  },
-  uploadContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  uploadTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1e293b',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 16,
-  },
-  uploadGrid: {
-    gap: 16,
-  },
-  uploadBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
-    borderStyle: 'dashed',
-    borderRadius: 24,
-    padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 32,
-    elevation: 4,
-  },
-  fullWidth: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-  },
-  uploadIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  uploadIconLarge: {
-    width: 56,
+  input: {
     height: 56,
     borderRadius: 16,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  uploadText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1e293b',
-    textAlign: 'center',
-  },
-  uploadSubtext: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#7c3aed',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  uploadContent: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  uploadDesc: {
-    fontSize: 12,
-    color: '#94a3b8',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  uploadButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(124, 58, 237, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inputsContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    fontSize: 15,
+    color: '#18181B',
   },
-  rowInputs: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  halfInputGroup: {
-    flex: 1,
+  inputMuted: {
+    backgroundColor: 'rgba(244, 244, 245, 0.6)',
+    color: '#71717A',
   },
   inputIcon: {
     position: 'absolute',
     right: 16,
-    top: '50%',
-    transform: [{ translateY: -20 }],
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(124, 58, 237, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    top: 18,
   },
-  vehiclesContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  vehiclesLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 16,
-    marginLeft: 8,
-  },
-  vehiclesGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  vehicleButton: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#ffffff',
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    marginHorizontal: 4,
-  },
-  vehicleButtonActive: {
-    borderColor: '#7c3aed',
-    backgroundColor: 'rgba(124, 58, 237, 0.05)',
-    transform: [{ scale: 1.05 }],
-  },
-  vehicleIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  vehicleLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#374151',
-  },
-  actions: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 64,
-    backgroundColor: '#8B5CF6',
-    borderRadius: 32,
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  saveText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginRight: 12,
-  },
-  completeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 80,
-    backgroundColor: '#7c3aed',
-    borderRadius: 40,
-    shadowColor: '#7c3aed',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 25,
-    elevation: 10,
-  },
-  completeText: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#ffffff',
-    marginRight: 12,
-  },
-  completeIcon: {
-    width: 32,
-    height: 32,
+  uploadCard: {
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#D4D4D8',
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 24,
+    alignItems: 'center',
+    gap: 8,
+  },
+  uploadIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  skipText: {
+  uploadTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    color: '#18181B',
   },
-  indicator: {
-    width: 128,
-    height: 6,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 3,
+  uploadSubtitle: {
+    fontSize: 12,
+    color: '#71717A',
+  },
+  uploadStatus: {
+    fontSize: 12,
+    color: '#8B5CF6',
+    fontWeight: '600',
+  },
+  footerWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 16,
+    paddingTop: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderTopWidth: 1,
+    borderTopColor: '#E4E4E7',
+  },
+  footerShell: {
+    maxWidth: 480,
+    width: '100%',
     alignSelf: 'center',
-    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  footerButton: {
+    height: 56,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  footerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 
