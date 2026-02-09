@@ -10,6 +10,7 @@ import ForgotOtpVerificationScreen from '../screens/Auth/ForgotOtpVerificationSc
 import PasswordRecoverScreen from '../screens/Auth/PasswordRecoverScreen';
 import PasswordUpdatedScreen from '../screens/Auth/PasswordUpdatedScreen';
 import OwnerProfileScreen from '../screens/Owner/OwnerProfileScreen';
+import OwnerCurrentAddressScreen from '../screens/Owner/OwnerCurrentAddressScreen';
 import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 
 const Stack = createStackNavigator();
@@ -26,6 +27,7 @@ const AuthNavigator = () => {
       <Stack.Screen name="PasswordRecover" component={PasswordRecoverScreen} />
       <Stack.Screen name="PasswordUpdated" component={PasswordUpdatedScreen} />
       <Stack.Screen name="OwnerProfile" component={OwnerProfileScreen} />
+      <Stack.Screen name="OwnerCurrentAddress" component={OwnerCurrentAddressScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );

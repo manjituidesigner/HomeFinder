@@ -49,7 +49,7 @@ const OwnerProfileScreen = ({ navigation }) => {
   };
 
   const handleNext = () => {
-    navigation.navigate('OwnerDashboard');
+    navigation.navigate('OwnerCurrentAddress');
   };
 
   return (
