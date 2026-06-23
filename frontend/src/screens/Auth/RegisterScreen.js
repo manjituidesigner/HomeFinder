@@ -6,6 +6,8 @@ import { register } from '../../services/authService';
 
 const RegisterScreen = ({ navigation }) => {
   const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
   const [formData, setFormData] = useState({
     name: '',
@@ -39,6 +41,9 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   const handleRegister = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    setErrorMessage('');
     try {
       console.log('Starting handleRegister with data:', formData);
       const trimmedEmail = String(formData.email || '').trim();
@@ -46,7 +51,8 @@ const RegisterScreen = ({ navigation }) => {
       const hasPhone = String(formData.phone || '').trim().length > 0;
 
       if (!hasPhone) {
-        Alert.alert('Error', 'Please enter your phone number');
+        setErrorMessage('Please enter your phone number');
+        setIsLoading(false);
         return;
       }
 
@@ -75,8 +81,10 @@ const RegisterScreen = ({ navigation }) => {
       });
     } catch (error) {
       console.log('Registration ERROR:', error);
-      const errorMsg = error?.response?.data?.error || error?.message || 'Registration failed';
-      Alert.alert('Registration Failed', errorMsg);
+      const errorMsg = error?.response?.data?.error || error?.message || 'Registration failed. Server might be unreachable.';
+      setErrorMessage(errorMsg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -233,9 +241,24 @@ const RegisterScreen = ({ navigation }) => {
       )}
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext} activeOpacity={0.8}>
-          <Text style={styles.nextText}>{step === 1 ? 'Next' : 'Register'}</Text>
+        <TouchableOpacity 
+          style={[styles.nextButton, isLoading && { opacity: 0.7 }]} 
+          onPress={handleNext} 
+          activeOpacity={0.8}
+          disabled={isLoading}
+        >
+          <Text style={styles.nextText}>
+            {isLoading ? 'Processing...' : (step === 1 ? 'Next' : 'Register')}
+          </Text>
         </TouchableOpacity>
+        
+        {errorMessage ? (
+          <View style={styles.errorContainer}>
+            <MaterialIcons name="error-outline" size={20} color="#DC2626" />
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>
             Already have an account?{' '}
@@ -455,6 +478,24 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     alignSelf: 'center',
     marginBottom: 8,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FEE2E2',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#F87171',
+  },
+  errorText: {
+    color: '#DC2626',
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    flexShrink: 1,
   },
 });
 

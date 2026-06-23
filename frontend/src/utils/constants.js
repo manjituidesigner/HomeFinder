@@ -1,15 +1,13 @@
+import { Platform } from 'react-native';
+
 // Constants
 const ENV_API_URL = process.env.EXPO_PUBLIC_API_URL || process.env.REACT_APP_API_URL;
 
 const getDevApiUrl = () => {
-  // Detect if running in GitHub Codespaces (web environment)
-  if (typeof window !== 'undefined' && window.location && window.location.hostname.endsWith('github.dev')) {
-    // Replace the current port (e.g. 19006) with backend port 3000
-    // URL format: <codespace-name>-<port>.app.github.dev
-    const hostname = window.location.hostname.replace(/-(\d+)\.app\.github\.dev$/, '-3001.app.github.dev');
-    return `https://${hostname}/api`;
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:3002/api';
   }
-  return 'http://localhost:3001/api';
+  return 'http://localhost:3002/api';
 };
 
 const DEFAULT_DEV_API_URL = getDevApiUrl();
