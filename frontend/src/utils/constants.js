@@ -4,10 +4,7 @@ import { Platform } from 'react-native';
 const ENV_API_URL = process.env.EXPO_PUBLIC_API_URL || process.env.REACT_APP_API_URL;
 
 const getDevApiUrl = () => {
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:3001/api';
-  }
-  return 'http://localhost:3001/api';
+  return 'https://backend-psi-puce-37.vercel.app/api';
 };
 
 const DEFAULT_DEV_API_URL = getDevApiUrl();

@@ -19,14 +19,27 @@ exports.getProperties = async (req, res) => {
 exports.createProperty = async (req, res) => {
   try {
     if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
-    const propertyData = req.body;
+    const propertyData = { ...req.body };
+    
+    // Parse stringified JSON fields from FormData
+    ['amenities', 'customCharges', 'images'].forEach(field => {
+      if (typeof propertyData[field] === 'string') {
+        try {
+          propertyData[field] = JSON.parse(propertyData[field]);
+        } catch (e) {
+          console.warn(`Failed to parse ${field}:`, e);
+        }
+      }
+    });
+
     let imageUrls = [];
 
     if (req.files && req.files.length > 0) {
+      const os = require('os');
       for (const file of req.files) {
-        const tempDir = path.join(__dirname, '../temp');
-        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
-        const tempPath = path.join(tempDir, file.originalname);
+        const tempDir = os.tmpdir();
+        const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
+        const tempPath = path.join(tempDir, uniqueName);
         fs.writeFileSync(tempPath, file.buffer);
         const uploadResult = await uploadImage(tempPath, 'properties');
         fs.unlinkSync(tempPath);
