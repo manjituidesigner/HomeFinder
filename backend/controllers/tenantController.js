@@ -1,21 +1,11 @@
-// Tenant controller
-const mongoose = require('mongoose');
-const Tenant = require('../models/Tenant');
-
-const ensureDbConnected = (res) => {
-  if (mongoose.connection.readyState !== 1) {
-    res.status(503).json({
-      error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-    });
-    return false;
-  }
-  return true;
-};
+// Tenant controller with Firestore
+const { db } = require('../config/firebase');
 
 exports.getTenants = async (req, res) => {
   try {
-    if (!ensureDbConnected(res)) return;
-    const tenants = await Tenant.find({ propertyId: req.params.propertyId });
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
+    const snapshot = await db.collection('tenants').where('propertyId', '==', req.params.propertyId).get();
+    const tenants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(tenants);
   } catch (error) {
     console.error('Error fetching tenants:', error);
@@ -25,9 +15,10 @@ exports.getTenants = async (req, res) => {
 
 exports.getTenant = async (req, res) => {
   try {
-    if (!ensureDbConnected(res)) return;
-    const tenant = await Tenant.findById(req.params.id);
-    res.json(tenant);
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
+    const doc = await db.collection('tenants').doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Tenant not found' });
+    res.json({ id: doc.id, ...doc.data() });
   } catch (error) {
     console.error('Error fetching tenant:', error);
     res.status(500).json({ error: 'Failed to fetch tenant' });
@@ -36,9 +27,11 @@ exports.getTenant = async (req, res) => {
 
 exports.updateTenant = async (req, res) => {
   try {
-    if (!ensureDbConnected(res)) return;
-    const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(tenant);
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
+    const id = req.params.id;
+    await db.collection('tenants').doc(id).update({ ...req.body, updatedAt: new Date() });
+    const updated = await db.collection('tenants').doc(id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (error) {
     console.error('Error updating tenant:', error);
     res.status(500).json({ error: 'Failed to update tenant' });

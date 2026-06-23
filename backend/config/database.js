@@ -1,13 +1,12 @@
 // Database config
 const mongoose = require('mongoose');
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const mongoURI = process.env.MONGODB_URI;
+
+const mongoURI = process.env.MONGODB_URI || process.env.MONGO_URI;
 
 if (!mongoURI) {
-  console.error('FATAL ERROR: MONGODB_URI environment variable is not defined.');
-  console.error('Please add MONGODB_URI to your Render.com Environment Variables.');
+  console.error('FATAL ERROR: MONGODB_URI or MONGO_URI environment variable is not defined.');
+  console.error('Please add it to your Environment Variables.');
   // We explicitly throw here to prevent the vague Mongoose "undefined" error
   if (process.env.NODE_ENV === 'production') {
      process.exit(1); 

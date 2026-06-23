@@ -1,10 +1,9 @@
 const express = require('express');
+const functions = require('firebase-functions');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-require('./config/database');
-// require('./config/firebase'); // Initialize Firebase - commented out as not configured
+require('./config/firebase'); // Initialize Firebase Admin SDK
 
 const app = express();
 
@@ -17,6 +16,8 @@ const envOrigins = envOriginsRaw
 const defaultDevOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
   'http://localhost:19006',
   'http://127.0.0.1:19006',
   'http://localhost:8081',
@@ -30,7 +31,6 @@ app.use(
   cors({
     origin: (origin, cb) => {
       if (!origin) return cb(null, true);
-      // Allow GitHub Codespaces and dynamic environments
       if (origin.endsWith('.app.github.dev') || origin.endsWith('.githubpreview.dev')) {
         return cb(null, true);
       }
@@ -50,13 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/tenants', tenantRoutes);
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-app.get('/api/health/db', (req, res) => {
-  const state = mongoose.connection.readyState;
-  const stateLabel =
-    state === 1 ? 'connected' : state === 2 ? 'connecting' : state === 0 ? 'disconnected' : 'unknown';
-  res.json({ status: 'ok', db: { state, stateLabel } });
-});
+app.get('/api/health', (req, res) => res.json({ status: 'ok', database: 'firebase' }));
 
 // Central error handler
 app.use((err, req, res, next) => {
@@ -65,10 +59,10 @@ app.use((err, req, res, next) => {
   res.status(status).json({ error: err.message || 'Server error' });
 });
 
-const basePort = Number(process.env.PORT) || 3000;
+const basePort = Number(process.env.PORT) || 3001;
 
 const listenWithRetry = (port, remainingAttempts) => {
-  const server = app.listen(port, () => console.log(`Rently backend listening on ${port}`));
+  const server = app.listen(port, () => console.log(`Rently backend listening on ${port} (Firebase Mode)`));
   server.on('error', (err) => {
     if (err && err.code === 'EADDRINUSE' && remainingAttempts > 0) {
       server.close(() => listenWithRetry(port + 1, remainingAttempts - 1));
@@ -83,3 +77,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+exports.api = functions.https.onRequest(app);

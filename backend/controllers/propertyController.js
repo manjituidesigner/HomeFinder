@@ -1,24 +1,14 @@
-// Property controller
-const mongoose = require('mongoose');
-const Property = require('../models/Property');
+// Property controller with Firestore
+const { db } = require('../config/firebase');
 const { uploadImage } = require('../services/imageService');
 const fs = require('fs');
 const path = require('path');
 
-const ensureDbConnected = (res) => {
-  if (mongoose.connection.readyState !== 1) {
-    res.status(503).json({
-      error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-    });
-    return false;
-  }
-  return true;
-};
-
 exports.getProperties = async (req, res) => {
   try {
-    if (!ensureDbConnected(res)) return;
-    const properties = await Property.find();
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
+    const snapshot = await db.collection('properties').get();
+    const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(properties);
   } catch (error) {
     console.error('Error fetching properties:', error);
@@ -28,33 +18,28 @@ exports.getProperties = async (req, res) => {
 
 exports.createProperty = async (req, res) => {
   try {
-    if (!ensureDbConnected(res)) return;
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
     const propertyData = req.body;
     let imageUrls = [];
 
-    // Handle image uploads if files are present
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        // Save file temporarily to upload to Cloudinary
-        const tempPath = path.join(__dirname, '../temp', file.originalname);
+        const tempDir = path.join(__dirname, '../temp');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+        const tempPath = path.join(tempDir, file.originalname);
         fs.writeFileSync(tempPath, file.buffer);
-
-        // Upload to Cloudinary
         const uploadResult = await uploadImage(tempPath, 'properties');
-
-        // Delete temp file
         fs.unlinkSync(tempPath);
-
         imageUrls.push(uploadResult.url);
       }
     }
 
-    // Add image URLs to property data
     propertyData.images = imageUrls;
+    propertyData.createdAt = new Date();
+    propertyData.updatedAt = new Date();
 
-    const property = new Property(propertyData);
-    await property.save();
-    res.status(201).json(property);
+    const docRef = await db.collection('properties').add(propertyData);
+    res.status(201).json({ id: docRef.id, ...propertyData });
   } catch (error) {
     console.error('Error creating property:', error);
     res.status(500).json({ error: 'Failed to create property' });
@@ -63,9 +48,11 @@ exports.createProperty = async (req, res) => {
 
 exports.updateProperty = async (req, res) => {
   try {
-    if (!ensureDbConnected(res)) return;
-    const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(property);
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
+    const id = req.params.id;
+    await db.collection('properties').doc(id).update({ ...req.body, updatedAt: new Date() });
+    const updated = await db.collection('properties').doc(id).get();
+    res.json({ id: updated.id, ...updated.data() });
   } catch (error) {
     console.error('Error updating property:', error);
     res.status(500).json({ error: 'Failed to update property' });
@@ -74,8 +61,8 @@ exports.updateProperty = async (req, res) => {
 
 exports.deleteProperty = async (req, res) => {
   try {
-    if (!ensureDbConnected(res)) return;
-    await Property.findByIdAndDelete(req.params.id);
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
+    await db.collection('properties').doc(req.params.id).delete();
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting property:', error);

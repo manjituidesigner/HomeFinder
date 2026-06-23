@@ -1,14 +1,27 @@
-// Firebase configuration for backend
 const admin = require('firebase-admin');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
-const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH || './config/serviceAccountKey.json';
-const serviceAccount = require(serviceAccountPath);
+const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH || path.join(__dirname, 'serviceAccountKey.json');
 
-// Initialize Firebase Admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  // databaseURL: 'https://your-project-id.firebaseio.com' // If using Realtime Database
-});
+let db;
 
-module.exports = admin;
+try {
+  if (fs.existsSync(serviceAccountPath)) {
+    const serviceAccount = require(serviceAccountPath);
+    if (admin.apps.length === 0) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    }
+    db = admin.firestore();
+    console.log('Firebase Admin SDK initialized successfully');
+  } else {
+    console.warn(`WARNING: Firebase serviceAccountKey.json not found at ${serviceAccountPath}. Firebase features will be disabled.`);
+  }
+} catch (error) {
+  console.error('Error initializing Firebase Admin SDK:', error.message);
+}
+
+module.exports = { admin, db };

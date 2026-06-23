@@ -7,3 +7,5 @@ npm-debug.log
 .env
 .vscode/
 .DS_Store
+.history/  
+serviceAccountKey.json  

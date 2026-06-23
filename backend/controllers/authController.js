@@ -1,315 +1,197 @@
-// Auth controller with MongoDB, JWT, and Twilio Verify API
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const User = require('../models/User');
 const { sendOTP, verifyOTP } = require('../services/twilioOtpService');
+const { db } = require('../config/firebase');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const DEFAULT_COUNTRY_CODE = process.env.DEFAULT_COUNTRY_CODE || '91';
 
-const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+const normalizeEmail = (email) => email ? String(email).trim().toLowerCase() : null;
 
 const ensurePhone = (phone) => {
-  const normalizedPhone = String(phone || '').trim();
-  if (!normalizedPhone) {
-    return { ok: false, error: 'Phone is required' };
+  if (!phone) return { ok: false, error: 'Phone is required' };
+  let normalized = String(phone).trim().replace(/\s+/g, '');
+  if (!normalized.startsWith('+')) {
+    normalized = `+${DEFAULT_COUNTRY_CODE}${normalized.replace(/^\+/, '')}`;
   }
-  if (!/^\+\d{10,15}$/.test(normalizedPhone)) {
-    return {
-      ok: false,
-      error: 'Phone number must be in E.164 format, e.g. +917986621813',
-    };
+  if (!/^\+\d{10,15}$/.test(normalized)) {
+    return { ok: false, error: 'Invalid phone format. Use E.164 (e.g. +917986621813)' };
   }
-  return { ok: true, phone: normalizedPhone };
+  return { ok: true, phone: normalized };
 };
 
-// Step 1: Initiate signup and send OTP
+// Signup Initiate
 exports.signupInitiate = async (req, res) => {
-  const { name, email, phone, password, role } = req.body;
   try {
+    const { name, email, phone, password, role } = req.body;
+    console.log('[Signup] Request:', { name, email, phone, role });
+
     if (!name || !password || !role) {
-      return res.status(400).json({ error: 'All fields are required' });
+      return res.status(400).json({ error: 'Name, PIN/Password, and Role are required' });
     }
 
-    const normalizedEmail = email ? normalizeEmail(email) : undefined;
     const phoneCheck = ensurePhone(phone);
-    if (!phoneCheck.ok) {
-      return res.status(400).json({ error: phoneCheck.error });
-    }
+    if (!phoneCheck.ok) return res.status(400).json({ error: phoneCheck.error });
     const normalizedPhone = phoneCheck.phone;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({
-        error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-      });
+    if (!db) return res.status(503).json({ error: 'Firebase Database not initialized' });
+
+    // Existing User Check
+    const usersCol = db.collection('users');
+    let exists = false;
+
+    if (normalizedEmail) {
+      const emailSnap = await usersCol.where('email', '==', normalizedEmail).get();
+      if (!emailSnap.empty) exists = true;
+    }
+    if (!exists) {
+      const phoneSnap = await usersCol.where('phone', '==', normalizedPhone).get();
+      if (!phoneSnap.empty) exists = true;
     }
 
-    const existingUser = await User.findOne({
-      $or: [
-        ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
-        ...(normalizedPhone ? [{ phone: normalizedPhone }] : []),
-      ],
-    });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
+    if (exists) return res.status(400).json({ error: 'User with this email or phone already exists' });
 
+    // Send OTP
     await sendOTP(normalizedPhone);
+    res.status(200).json({ message: 'OTP sent successfully', phone: normalizedPhone, otpSent: true });
 
-    res.status(200).json({
-      message: 'OTP sent to your phone',
-      email: normalizedEmail,
-      phone: normalizedPhone,
-      otpSent: true,
-      otpVia: 'sms',
-    });
   } catch (error) {
-    console.error('Signup initiate error:', error);
-    res.status(error.status || 500).json({ error: error.message || 'Failed to send OTP' });
+    console.error('[Signup Initiate Error]:', error);
+    res.status(500).json({ error: error.message || 'Server error during signup initiate' });
   }
 };
 
-// Step 2: Verify OTP and complete signup
+// Signup Verify
 exports.signupVerifyOTP = async (req, res) => {
-  const { email, otp, otpSms, name, password, phone, role } = req.body;
   try {
-    if (!name || !password || !role) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-    const normalizedEmail = email ? normalizeEmail(email) : undefined;
-    const phoneCheck = ensurePhone(phone);
-    if (!phoneCheck.ok) {
-      return res.status(400).json({ error: phoneCheck.error });
-    }
-    const normalizedPhone = phoneCheck.phone;
-
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({
-        error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-      });
-    }
-
+    const { name, email, phone, password, otp, otpSms, role } = req.body;
     const code = otpSms || otp;
+
     if (!code) return res.status(400).json({ error: 'OTP is required' });
-    const isValid = await verifyOTP(normalizedPhone, code);
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
-    }
+    
+    const phoneCheck = ensurePhone(phone);
+    if (!phoneCheck.ok) return res.status(400).json({ error: phoneCheck.error });
+    const normalizedPhone = phoneCheck.phone;
 
-    // Create user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({
+    const isVerified = await verifyOTP(normalizedPhone, code);
+    if (!isVerified) return res.status(400).json({ error: 'Invalid or expired OTP' });
+
+    const hashedPassword = await bcrypt.hash(String(password), 10);
+    const userData = {
       name,
-      email: normalizedEmail,
+      email: normalizeEmail(email),
+      phone: normalizedPhone,
       password: hashedPassword,
-      phone: normalizedPhone,
-      role,
+      role: role || 'tenant',
       verified: true,
-    });
-    await user.save();
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
 
-    // Generate JWT
-    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const docRef = await db.collection('users').add(userData);
+    const token = jwt.sign({ id: docRef.id, role: userData.role }, JWT_SECRET, { expiresIn: '7d' });
 
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: { id: user._id, name, email, role },
-      token,
-    });
+    res.status(201).json({ message: 'Registration successful', user: { id: docRef.id, name, role }, token });
+
   } catch (error) {
-    console.error('Signup verify error:', error);
-    res.status(error.status || 500).json({ error: error.message || 'Failed to verify OTP' });
-  }
-};
-
-// Step 1: Forgot password - send OTP
-exports.forgotPasswordInitiate = async (req, res) => {
-  const { phone } = req.body;
-  try {
-    const phoneCheck = ensurePhone(phone);
-    if (!phoneCheck.ok) {
-      return res.status(400).json({ error: phoneCheck.error });
-    }
-    const normalizedPhone = phoneCheck.phone;
-
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({
-        error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-      });
-    }
-
-    const resolvedUser = await User.findOne({ phone: normalizedPhone });
-    if (!resolvedUser) {
-      return res.status(400).json({ error: 'User not found' });
-    }
-
-    if (!resolvedUser.phone) {
-      return res.status(400).json({ error: 'No phone number is registered for this account' });
-    }
-
-    await sendOTP(normalizedPhone);
-
-    res.status(200).json({
-      message: 'OTP sent to your registered phone number',
-      email: resolvedUser.email,
-      phone: normalizedPhone,
-      otpSent: true,
-      otpVia: 'sms',
-    });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(error.status || 500).json({ error: error.message || 'Failed to send OTP' });
-  }
-};
-
-// Step 2: Verify OTP for forgot password
-exports.forgotPasswordVerifyOTP = async (req, res) => {
-  const { otp, otpSms, phone } = req.body;
-  try {
-    const phoneCheck = ensurePhone(phone);
-    if (!phoneCheck.ok) {
-      return res.status(400).json({ error: phoneCheck.error });
-    }
-    const normalizedPhone = phoneCheck.phone;
-
-    if (!(otpSms || otp)) {
-      return res.status(400).json({ error: 'OTP is required' });
-    }
-
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({
-        error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-      });
-    }
-
-    const resolvedUser = await User.findOne({ phone: normalizedPhone });
-    if (!resolvedUser) {
-      return res.status(400).json({ error: 'User not found' });
-    }
-
-    const code = otpSms || otp;
-    const isValid = await verifyOTP(normalizedPhone, code);
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
-    }
-
-    // Generate a temporary token for password reset
-    const resetToken = jwt.sign({ userId: resolvedUser._id, purpose: 'password-reset' }, JWT_SECRET, { expiresIn: '15m' });
-
-    res.status(200).json({
-      message: 'OTP verified. You can now reset your password.',
-      resetToken,
-      email: resolvedUser.email,
-      phone: resolvedUser.phone,
-    });
-  } catch (error) {
-    console.error('Forgot password verify error:', error);
-    res.status(error.status || 500).json({ error: error.message || 'Failed to verify OTP' });
-  }
-};
-
-// Step 3: Reset password
-exports.resetPassword = async (req, res) => {
-  const { email, phone, newPassword, resetToken } = req.body;
-  try {
-    if (!newPassword || !resetToken) {
-      return res.status(400).json({ error: 'Password and reset token are required' });
-    }
-
-    if (!email && !phone) {
-      return res.status(400).json({ error: 'Email or phone is required' });
-    }
-
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({
-        error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-      });
-    }
-
-    let decoded;
-    try {
-      decoded = jwt.verify(resetToken, JWT_SECRET);
-      if (decoded.purpose !== 'password-reset' || !decoded.userId) {
-        return res.status(400).json({ error: 'Invalid or expired reset token' });
-      }
-    } catch (error) {
-      return res.status(400).json({ error: 'Invalid or expired reset token' });
-    }
-
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return res.status(400).json({ error: 'User not found' });
-    }
-
-    if (email && normalizeEmail(user.email) !== normalizeEmail(email)) {
-      return res.status(400).json({ error: 'Email does not match' });
-    }
-
-    if (phone && String(user.phone || '').trim() !== String(phone).trim()) {
-      return res.status(400).json({ error: 'Phone number does not match' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await User.findByIdAndUpdate(user._id, { password: hashedPassword });
-
-    res.status(200).json({ message: 'Password reset successfully' });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ error: error.message || 'Failed to reset password' });
+    console.error('[Signup Verify Error]:', error);
+    res.status(500).json({ error: 'Failed to complete registration' });
   }
 };
 
 // Login
 exports.login = async (req, res) => {
-  const { email, password, phone, pin } = req.body;
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({
-        error: 'Database not connected. Please check MONGODB_URI and Atlas IP whitelist, then restart the backend.',
-      });
-    }
+    const { email, phone, password, pin } = req.body;
+    const secret = pin || password;
 
-    const rawSecret = typeof pin === 'string' && pin.length > 0 ? pin : password;
-    if (!rawSecret) {
-      return res.status(400).json({ error: 'PIN is required' });
-    }
+    if (!secret) return res.status(400).json({ error: 'Password or PIN is required' });
 
-    let user;
+    let query = db.collection('users');
+    let snapshot;
+
     if (phone) {
-      const digitsOnly = String(phone).replace(/[^0-9+]/g, '').trim();
-      const normalizedPhone = digitsOnly.startsWith('+')
-        ? digitsOnly
-        : digitsOnly.length === 10
-          ? `+${DEFAULT_COUNTRY_CODE}${digitsOnly}`
-          : `+${digitsOnly}`;
-
-      if (!/^\+\d{10,15}$/.test(normalizedPhone)) {
-        return res.status(400).json({
-          error: 'Phone number must be valid (E.164). Example: +917986621813',
-        });
-      }
-
-      user = await User.findOne({ phone: normalizedPhone });
+      const phoneCheck = ensurePhone(phone);
+      if (!phoneCheck.ok) return res.status(400).json({ error: phoneCheck.error });
+      snapshot = await query.where('phone', '==', phoneCheck.phone).limit(1).get();
     } else if (email) {
-      const normalizedEmail = normalizeEmail(email);
-      user = await User.findOne({ email: normalizedEmail });
+      snapshot = await query.where('email', '==', normalizeEmail(email)).limit(1).get();
     } else {
-      return res.status(400).json({ error: 'Phone (preferred) or email is required' });
+      return res.status(400).json({ error: 'Email or Phone is required' });
     }
 
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    if (snapshot.empty) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const isMatch = await bcrypt.compare(String(rawSecret), user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    const userDoc = snapshot.docs[0];
+    const user = userDoc.data();
 
-    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role }, token });
+    const isMatch = await bcrypt.compare(String(secret), user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: userDoc.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ message: 'Login successful', user: { id: userDoc.id, name: user.name, role: user.role }, token });
+
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('[Login Error]:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+};
+
+// Forgot Password Initiate
+exports.forgotPasswordInitiate = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    const phoneCheck = ensurePhone(phone);
+    if (!phoneCheck.ok) return res.status(400).json({ error: phoneCheck.error });
+
+    const snapshot = await db.collection('users').where('phone', '==', phoneCheck.phone).limit(1).get();
+    if (snapshot.empty) return res.status(404).json({ error: 'No user found with this phone number' });
+
+    await sendOTP(phoneCheck.phone);
+    res.json({ message: 'OTP sent for password reset', phone: phoneCheck.phone });
+  } catch (error) {
+    console.error('[Forgot Password Error]:', error);
+    res.status(500).json({ error: 'Failed to initiate password reset' });
+  }
+};
+
+// Forgot Password Verify
+exports.forgotPasswordVerifyOTP = async (req, res) => {
+  try {
+    const { phone, otp, otpSms } = req.body;
+    const code = otpSms || otp;
+    const phoneCheck = ensurePhone(phone);
+    if (!phoneCheck.ok) return res.status(400).json({ error: phoneCheck.error });
+
+    const isVerified = await verifyOTP(phoneCheck.phone, code);
+    if (!isVerified) return res.status(400).json({ error: 'Invalid or expired OTP' });
+
+    const snapshot = await db.collection('users').where('phone', '==', phoneCheck.phone).limit(1).get();
+    const resetToken = jwt.sign({ id: snapshot.docs[0].id, purpose: 'reset' }, JWT_SECRET, { expiresIn: '15m' });
+
+    res.json({ message: 'OTP verified', resetToken });
+  } catch (error) {
+    console.error('[Forgot Password Verify Error]:', error);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+};
+
+// Reset Password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+    if (!resetToken || !newPassword) return res.status(400).json({ error: 'Token and new password are required' });
+
+    const decoded = jwt.verify(resetToken, JWT_SECRET);
+    if (decoded.purpose !== 'reset') return res.status(400).json({ error: 'Invalid reset token' });
+
+    const hashedPassword = await bcrypt.hash(String(newPassword), 10);
+    await db.collection('users').doc(decoded.id).update({ password: hashedPassword, updatedAt: new Date() });
+
+    res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('[Reset Password Error]:', error);
+    res.status(400).json({ error: 'Token expired or invalid' });
   }
 };

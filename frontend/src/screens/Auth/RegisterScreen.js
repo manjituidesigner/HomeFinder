@@ -23,35 +23,24 @@ const RegisterScreen = ({ navigation }) => {
   }, [step]);
 
   const handleNext = () => {
+    console.log('handleNext clicked, current step:', step);
     if (step === 1) {
       // Validate step 1
       if (!formData.name || !formData.phone || !formData.pin) {
         Alert.alert('Error', 'Please enter your name, phone, and PIN');
         return;
       }
-
-      const hasPhone = String(formData.phone || '').trim().length > 0;
-      if (hasPhone) {
-        const normalizedCountryCode = String(countryCode).trim().replace(/\s+/g, '');
-        const normalizedLocalPhone = String(formData.phone).trim().replace(/\s+/g, '');
-        if (!normalizedCountryCode.startsWith('+') || !/^\+\d{1,4}$/.test(normalizedCountryCode)) {
-          Alert.alert('Error', 'Enter a valid country code. Example: +91');
-          return;
-        }
-        if (!/^\d{6,15}$/.test(normalizedLocalPhone)) {
-          Alert.alert('Error', 'Enter a valid phone number (digits only).');
-          return;
-        }
-      }
+      console.log('Step 1 validation passed, moving to step 2');
       setStep(2);
     } else if (step === 2) {
-      // Register
+      console.log('Step 2: Registering user...');
       handleRegister();
     }
   };
 
   const handleRegister = async () => {
     try {
+      console.log('Starting handleRegister with data:', formData);
       const trimmedEmail = String(formData.email || '').trim();
       const hasEmail = trimmedEmail.length > 0;
       const hasPhone = String(formData.phone || '').trim().length > 0;
@@ -61,28 +50,33 @@ const RegisterScreen = ({ navigation }) => {
         return;
       }
 
-      let combinedPhone;
-      if (hasPhone) {
-        const normalizedCountryCode = String(countryCode).trim().replace(/\s+/g, '').replace(/(?!^)\+/g, '').replace(/[^\d+]/g, '');
-        const normalizedLocalPhone = String(formData.phone).trim().replace(/\s+/g, '').replace(/[^\d]/g, '');
-        combinedPhone = `${normalizedCountryCode}${normalizedLocalPhone}`;
-      }
+      const normalizedCountryCode = String(countryCode).trim();
+      const normalizedLocalPhone = String(formData.phone).trim();
+      const combinedPhone = `${normalizedCountryCode}${normalizedLocalPhone}`;
+      console.log('Combined phone:', combinedPhone);
 
       const userData = {
-        ...formData,
+        name: formData.name,
         email: hasEmail ? trimmedEmail : undefined,
-        phone: hasPhone ? combinedPhone : undefined,
+        phone: combinedPhone,
         password: formData.pin,
+        role: formData.role || 'tenant',
         otpVia: 'sms',
       };
 
+      console.log('Calling register API with:', userData);
       const res = await register(userData);
-      navigation.navigate('OtpVerification', { from: 'register', userData, otpVia: res?.otpVia });
-      return;
+      console.log('API Response received:', res);
+      
+      navigation.navigate('OtpVerification', { 
+        from: 'register', 
+        userData, 
+        otpVia: res?.otpVia || 'sms' 
+      });
     } catch (error) {
-      console.log('Registration error:', error);
-      Alert.alert('Error', error?.response?.data?.error || error?.message || 'Registration failed');
-      return;
+      console.log('Registration ERROR:', error);
+      const errorMsg = error?.response?.data?.error || error?.message || 'Registration failed';
+      Alert.alert('Registration Failed', errorMsg);
     }
   };
 

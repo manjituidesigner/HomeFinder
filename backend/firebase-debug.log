@@ -1,0 +1,139 @@
+[debug] [2026-06-22T08:04:30.325Z] ----------------------------------------------------------------------
+[debug] [2026-06-22T08:04:30.327Z] Command:       E:\nodejs\node.exe C:\Users\sanje\AppData\Local\npm-cache\_npx\7750544ccf494d8b\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions --debug
+[debug] [2026-06-22T08:04:30.328Z] CLI Version:   15.22.0
+[debug] [2026-06-22T08:04:30.328Z] Platform:      win32
+[debug] [2026-06-22T08:04:30.328Z] Node Version:  v25.9.0
+[debug] [2026-06-22T08:04:30.328Z] Detected Agent: antigravity
+[debug] [2026-06-22T08:04:30.328Z] Time:          Mon Jun 22 2026 13:34:30 GMT+0530 (India Standard Time)
+[debug] [2026-06-22T08:04:30.328Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-22T08:04:31.636Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-22T08:04:31.637Z] > authorizing via signed-in user (manjit.uidesigner@gmail.com)
+[debug] [2026-06-22T08:04:31.637Z] [iam] checking project apna-house for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-06-22T08:04:31.638Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:31.638Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:31.638Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions [none]
+[debug] [2026-06-22T08:04:31.639Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions  x-goog-user-project=apna-house
+[debug] [2026-06-22T08:04:31.639Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-06-22T08:04:32.017Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions 200
+[debug] [2026-06-22T08:04:32.017Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-06-22T08:04:32.018Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:32.018Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:32.018Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/apna-house/serviceAccounts/apna-house@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-06-22T08:04:32.018Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/apna-house/serviceAccounts/apna-house@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-06-22T08:04:33.740Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/apna-house/serviceAccounts/apna-house@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-06-22T08:04:33.740Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/apna-house/serviceAccounts/apna-house@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'apna-house'...
+[info] 
+[info] i  deploying functions 
+[debug] [2026-06-22T08:04:33.742Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:33.742Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:33.742Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/apna-house [none]
+[debug] [2026-06-22T08:04:34.078Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/apna-house 200
+[debug] [2026-06-22T08:04:34.078Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/apna-house {"projectNumber":"494944242406","projectId":"apna-house","lifecycleState":"ACTIVE","name":"apna-house","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-12-17T06:51:50.965049Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-06-22T08:04:34.079Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:34.079Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:34.079Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/apna-house/adminSdkConfig [none]
+[debug] [2026-06-22T08:04:34.546Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/apna-house/adminSdkConfig 200
+[debug] [2026-06-22T08:04:34.547Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/apna-house/adminSdkConfig {"projectId":"apna-house","storageBucket":"apna-house.firebasestorage.app"}
+[debug] [2026-06-22T08:04:34.547Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:34.547Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:34.547Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs [none]
+[debug] [2026-06-22T08:04:35.020Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs 200
+[debug] [2026-06-22T08:04:35.020Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs {"configs":[{"name":"projects/apna-house/configs/mongodb"}]}
+[debug] [2026-06-22T08:04:35.020Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:35.020Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:35.020Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs/mongodb/variables [none]
+[debug] [2026-06-22T08:04:35.387Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs/mongodb/variables 200
+[debug] [2026-06-22T08:04:35.387Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs/mongodb/variables {"variables":[{"name":"projects/apna-house/configs/mongodb/variables/uri","updateTime":"2025-12-17T06:59:50.642943380Z"}]}
+[debug] [2026-06-22T08:04:35.388Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:35.388Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:35.388Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs/mongodb/variables/uri [none]
+[debug] [2026-06-22T08:04:35.972Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs/mongodb/variables/uri 200
+[debug] [2026-06-22T08:04:35.972Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/apna-house/configs/mongodb/variables/uri {"name":"projects/apna-house/configs/mongodb/variables/uri","updateTime":"2025-12-17T06:59:50.642943380Z","text":"mongodb+srv://manjitgraphic82:Manjit786@cluster0.xazekkm.mongodb.net/home"}
+[debug] [2026-06-22T08:04:35.973Z] Validating nodejs source
+[warn] !  functions: Runtime Node.js 20 was deprecated on 2026-04-30 and will be decommissioned on 2026-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy 
+[debug] [2026-06-22T08:04:36.589Z] > [functions] package.json contents: {
+  "name": "rently-backend",
+  "version": "0.1.0",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.645.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.2.5",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "nodemailer": "^6.9.14",
+    "nodemon": "^3.1.11",
+    "otp-generator": "^4.0.1",
+    "twilio": "^5.12.0"
+  }
+}
+[debug] [2026-06-22T08:04:36.590Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2026-06-22T08:04:36.590Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-06-22T08:04:36.604Z] Found firebase-functions binary at 'E:\Manjit - system data\test\rental\rental\backend\node_modules\.bin\firebase-functions'
+[info] Serving at port 8591
+
+[info] ◇ injected env (4) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+[info] ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+
+[info] Firebase Admin SDK initialized successfully
+
+[info] ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+[info] ◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+[debug] [2026-06-22T08:04:37.486Z] Got response from /__/functions.yaml {"endpoints":{},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[debug] [2026-06-22T08:04:41.510Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:41.511Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:41.511Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/apna-house/locations/-/functions [none]
+[debug] [2026-06-22T08:04:42.313Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/apna-house/locations/-/functions 200
+[debug] [2026-06-22T08:04:42.314Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/apna-house/locations/-/functions {}
+[debug] [2026-06-22T08:04:42.314Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:42.314Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:42.314Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/apna-house/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2026-06-22T08:04:43.969Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/apna-house/locations/-/functions 200
+[debug] [2026-06-22T08:04:43.969Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/apna-house/locations/-/functions {"functions":[{"name":"projects/apna-house/locations/us-central1/functions/apiV2","buildConfig":{"build":"projects/494944242406/locations/us-central1/builds/3bbf04af-c05d-4a02-a51a-3b08f5ec8107","runtime":"nodejs20","entryPoint":"apiV2","source":{"storageSource":{"bucket":"gcf-v2-sources-494944242406-us-central1","object":"apiV2/function-source.zip","generation":"1767209953081602"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/apna-house/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-494944242406-us-central1","object":"apiV2/function-source.zip","generation":"1767209953081602"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/apna-house/serviceAccounts/494944242406-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/apna-house/locations/us-central1/services/apiv2","timeoutSeconds":60,"environmentVariables":{"APP_PORT":"5000","FIREBASE_CONFIG":"{\"projectId\":\"apna-house\",\"storageBucket\":\"apna-house.firebasestorage.app\"}","GCLOUD_PROJECT":"apna-house","EVENTARC_CLOUD_EVENT_SOURCE":"projects/apna-house/locations/us-central1/services/apiV2","FUNCTION_TARGET":"apiV2","LOG_EXECUTION_ID":"true"},"maxInstanceCount":3,"ingressSettings":"ALLOW_ALL","uri":"https://apiv2-pnmqz54req-uc.a.run.app","serviceAccountEmail":"494944242406-compute@developer.gserviceaccount.com","availableMemory":"512Mi","allTrafficOnLatestRevision":true,"secretEnvironmentVariables":[{"key":"MONGODB_URI_SECRET","projectId":"apna-house","secret":"MONGODB_URI_SECRET","version":"1"},{"key":"JWT_SECRET_SECRET","projectId":"apna-house","secret":"JWT_SECRET_SECRET","version":"1"},{"key":"CLOUDINARY_CLOUD_NAME_SECRET","projectId":"apna-house","secret":"CLOUDINARY_CLOUD_NAME_SECRET","version":"4"},{"key":"CLOUDINARY_API_KEY_SECRET","projectId":"apna-house","secret":"CLOUDINARY_API_KEY_SECRET","version":"4"},{"key":"CLOUDINARY_API_SECRET_SECRET","projectId":"apna-house","secret":"CLOUDINARY_API_SECRET_SECRET","version":"2"}],"revision":"apiv2-00008-nir","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-03-17T16:48:52.011871432Z","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"b09d114f8d391febe8a62fb5014dda00cdc7e386"},"environment":"GEN_2","url":"https://us-central1-apna-house.cloudfunctions.net/apiV2","createTime":"2025-12-17T10:37:18.761436087Z"}]}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2026-06-22T08:04:43.970Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-22T08:04:43.971Z] > authorizing via signed-in user (manjit.uidesigner@gmail.com)
+[debug] [2026-06-22T08:04:43.971Z] [iam] checking project apna-house for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2026-06-22T08:04:43.971Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:43.971Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:43.971Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions [none]
+[debug] [2026-06-22T08:04:43.971Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions  x-goog-user-project=apna-house
+[debug] [2026-06-22T08:04:43.971Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-06-22T08:04:45.421Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions 200
+[debug] [2026-06-22T08:04:45.421Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/apna-house:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-06-22T08:04:45.422Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:45.422Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:45.422Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/apna-house/instances pageSize=100&pageToken=
+[debug] [2026-06-22T08:04:47.155Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/apna-house/instances 200
+[debug] [2026-06-22T08:04:47.155Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/apna-house/instances {}
+[info] i  functions: Loaded environment variables from .env. 
+[debug] [2026-06-22T08:04:47.159Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:47.159Z] Checked if tokens are valid: true, expires at: 1782118168671
+[debug] [2026-06-22T08:04:47.159Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/apna-house/billingInfo [none]
+[debug] [2026-06-22T08:04:48.679Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/apna-house/billingInfo 200
+[debug] [2026-06-22T08:04:48.679Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/apna-house/billingInfo {"name":"projects/apna-house/billingInfo","projectId":"apna-house","billingAccountName":"billingAccounts/01321F-36BEF1-32BAA7","billingEnabled":false}
+[error] 
+[error] Error: Extensions require the Blaze plan, but project apna-house is not on the Blaze plan. Please visit https://console.cloud.google.com/billing/linkedaccount?project=apna-house to upgrade your project.

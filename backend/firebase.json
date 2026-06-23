@@ -1,7 +1,7 @@
 {
   "functions": {
-    "source": "functions",
-    "runtime": "nodejs16"
+    "source": ".",
+    "runtime": "nodejs20"
   },
   "hosting": {
     "public": "../frontend/build",
