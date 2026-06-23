@@ -2,8 +2,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { setAuthSession } from '../../services/authStorage';
 
-const SuccessScreen = ({ navigation }) => {
+const SuccessScreen = ({ navigation, route }) => {
+  const { user, token } = route.params || {};
+
+  const handleGetStarted = async () => {
+    if (token) {
+      await setAuthSession(token, user);
+    } else {
+      navigation.navigate('Login');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
@@ -13,11 +24,11 @@ const SuccessScreen = ({ navigation }) => {
       <Text style={styles.text}>
         Thank you for joining our community. Your property management journey starts now.
       </Text>
-      <TouchableOpacity style={styles.getStartedButton} onPress={() => navigation.navigate('Login')}>
+      <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
         <Text style={styles.getStartedText}>Get Started</Text>
         <MaterialIcons name="arrow-forward" size={24} color="#FFFFFF" />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.viewProfileButton}>
+      <TouchableOpacity style={styles.viewProfileButton} onPress={handleGetStarted}>
         <Text style={styles.viewProfileText}>View my profile</Text>
       </TouchableOpacity>
       <View style={styles.indicator} />

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { login } from '../../services/authService';
-import { setAuthToken } from '../../services/authStorage';
+import { setAuthSession } from '../../services/authStorage';
 
 const LoginScreen = ({ navigation }) => {
   const [loginMethod, setLoginMethod] = useState('phone');
@@ -61,7 +61,7 @@ const LoginScreen = ({ navigation }) => {
       }
 
       setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
-      await setAuthToken(res.token);
+      await setAuthSession(res.token, res.user);
 
       // Do not navigate inside Auth stack after setting token.
       // AppNavigator will switch to the authenticated Drawer automatically.

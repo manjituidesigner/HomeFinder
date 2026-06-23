@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, Platform, Image, Modal, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { createPropertyWithImages } from '../../services/propertyService';
+import { createPropertyWithImages, updateProperty } from '../../services/propertyService';
 
 const CustomDropdown = ({ label, value, options, onSelect, noMargin }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -45,16 +45,38 @@ const CustomDropdown = ({ label, value, options, onSelect, noMargin }) => {
   );
 };
 
-const AddPropertyScreen = ({ navigation }) => {
+const AddPropertyScreen = ({ navigation, route }) => {
+  const editProperty = route?.params?.editProperty;
+  const isEditMode = !!editProperty;
+
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4; // Extend to 9 later
   const [isPublishing, setIsPublishing] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: '', images: [], type: 'Independent House', rooms: '', config: '1 BHK', floor: '', listingType: 'For Rent', furnishing: 'Furnished',
+    name: '', description: '', carpetArea: '', images: [], type: 'Independent House', rooms: '', config: '1 BHK', floor: '', listingType: 'For Rent', furnishing: 'Furnished',
     rentAmount: '', securityDeposit: '', maintenanceCharges: '', customCharges: [],
     amenities: [], drinks: 'Not Allowed', smoking: 'Not Allowed', lateNight: 'Not Allowed', visitors: 'Allowed', noticeTime: '', parking: 'No Parking', parkingCount: '', parkingLocation: '', tenantType: 'Working Boys',
   });
+
+  useEffect(() => {
+    if (isEditMode && editProperty) {
+      setFormData(prev => ({
+        ...prev,
+        ...editProperty,
+        images: editProperty.images || [],
+        amenities: editProperty.amenities || [],
+        customCharges: editProperty.customCharges || [],
+        rentAmount: editProperty.rentAmount ? editProperty.rentAmount.toString() : '',
+        securityDeposit: editProperty.securityDeposit ? editProperty.securityDeposit.toString() : '',
+        rooms: editProperty.rooms ? editProperty.rooms.toString() : '',
+        noticeTime: editProperty.noticeTime ? editProperty.noticeTime.toString() : '',
+        parkingCount: editProperty.parkingCount ? editProperty.parkingCount.toString() : '',
+        description: editProperty.description || '',
+        carpetArea: editProperty.carpetArea ? editProperty.carpetArea.toString() : '',
+      }));
+    }
+  }, [editProperty, isEditMode]);
 
   const updateForm = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
 
@@ -116,12 +138,18 @@ const AddPropertyScreen = ({ navigation }) => {
   const handlePublish = async () => { 
     try {
       setIsPublishing(true);
-      await createPropertyWithImages(formData);
-      alert('Property Published Successfully!'); 
-      navigation.goBack(); 
+      if (isEditMode) {
+        await updateProperty(editProperty.id, formData);
+        alert('Property Updated Successfully!');
+        navigation.goBack(); 
+      } else {
+        await createPropertyWithImages(formData);
+        alert('Property Published Successfully!'); 
+        navigation.goBack(); 
+      }
     } catch (err) {
       console.error(err);
-      alert('Failed to publish property: ' + (err.message || err.toString()));
+      alert(`Failed to ${isEditMode ? 'update' : 'publish'} property: ` + (err.message || err.toString()));
     } finally {
       setIsPublishing(false);
     }
@@ -150,7 +178,7 @@ const AddPropertyScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <MaterialIcons name="keyboard-arrow-left" size={28} color="#0F172A" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add New Property</Text>
+        <Text style={styles.headerTitle}>{isEditMode ? 'Edit Property' : 'Add New Property'}</Text>
         <View style={{ width: 28 }} /> 
       </View>
 
@@ -173,6 +201,11 @@ const AddPropertyScreen = ({ navigation }) => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Property Name</Text>
               <TextInput style={styles.input} placeholder="e.g. Modern Apartment" placeholderTextColor="#94A3B8" value={formData.name} onChangeText={v => updateForm('name', v)} />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>About Property (Description)</Text>
+              <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} placeholder="Describe your property..." placeholderTextColor="#94A3B8" multiline value={formData.description} onChangeText={v => updateForm('description', v)} />
             </View>
 
             <View style={styles.inputGroup}>
@@ -207,9 +240,15 @@ const AddPropertyScreen = ({ navigation }) => {
               </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Floor</Text>
-              <TextInput style={styles.input} placeholder="e.g. Ground Floor, 5th" placeholderTextColor="#94A3B8" value={formData.floor} onChangeText={v => updateForm('floor', v)} />
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                <Text style={styles.label}>Floor</Text>
+                <TextInput style={styles.input} placeholder="e.g. Ground Floor, 5th" placeholderTextColor="#94A3B8" value={formData.floor} onChangeText={v => updateForm('floor', v)} />
+              </View>
+              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                <Text style={styles.label}>Carpet Area (sqft)</Text>
+                <TextInput style={styles.input} placeholder="e.g. 1250" placeholderTextColor="#94A3B8" keyboardType="numeric" value={formData.carpetArea} onChangeText={v => updateForm('carpetArea', v)} />
+              </View>
             </View>
 
             <View style={styles.row}>
@@ -405,7 +444,7 @@ const AddPropertyScreen = ({ navigation }) => {
             {isPublishing && currentStep === totalSteps ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.nextBtnText}>{currentStep < totalSteps ? 'Next' : 'Publish'}</Text>
+              <Text style={styles.nextBtnText}>{currentStep < totalSteps ? 'Next' : (isEditMode ? 'Update' : 'Publish')}</Text>
             )}
           </TouchableOpacity>
         </View>

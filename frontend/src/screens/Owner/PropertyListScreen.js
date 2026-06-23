@@ -85,7 +85,18 @@ const StatusDropdown = ({ property, onStatusChange }) => {
 };
 
 const PropertyCard = ({ item, navigation, onStatusChange }) => {
-  const images = item.images && item.images.length > 0 ? item.images : ['https://via.placeholder.com/400x200?text=No+Image'];
+  const parseImages = (imgs) => {
+    if (!imgs) return ['https://via.placeholder.com/400x200?text=No+Image'];
+    if (Array.isArray(imgs)) return imgs.length > 0 ? imgs : ['https://via.placeholder.com/400x200?text=No+Image'];
+    if (typeof imgs === 'string') {
+      try {
+        const parsed = JSON.parse(imgs);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return ['https://via.placeholder.com/400x200?text=No+Image'];
+  };
+  const images = parseImages(item.images);
   
   const formatDate = (dateString) => {
     if (!dateString) return 'Recently';

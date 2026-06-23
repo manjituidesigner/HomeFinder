@@ -1,0 +1,8 @@
+{
+  "description": "Rently Frontend Application",
+  "display": "standalone",
+  "lang": "en",
+  "name": "Rently",
+  "short_name": "Rently",
+  "start_url": "/?utm_source=web_app_manifest"
+}

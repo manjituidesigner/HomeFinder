@@ -1,153 +1,161 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import { MaterialIcons } from '@expo/vector-icons';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ActivityIndicator } from 'react-native';
-import { clearAuthToken } from '../services/authStorage';
-import { deleteAccountInitiate, deleteAccountVerify } from '../services/authService';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { clearAuthToken, getAuthSession, subscribeAuthToken } from '../services/authStorage';
 
 const CustomDrawerContent = (props) => {
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteOtp, setDeleteOtp] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [user, setUser] = useState(null);
 
-  const handleInitiateDelete = async () => {
-    setIsSendingOtp(true);
-    setMessage({ type: '', text: '' });
-    try {
-      await deleteAccountInitiate();
-      setShowDeleteModal(true);
-    } catch (error) {
-      // Inline error message is not possible here without a modal. So we just open modal with error.
-      setShowDeleteModal(true);
-      setMessage({ type: 'error', text: error?.response?.data?.error || error?.message || 'Failed to initiate deletion' });
-    } finally {
-      setIsSendingOtp(false);
-    }
-  };
+  useEffect(() => {
+    let isMounted = true;
+    getAuthSession().then(session => {
+      if (isMounted) setUser(session.user);
+    });
+    const unsubscribe = subscribeAuthToken((t, u) => {
+      if (isMounted) setUser(u);
+    });
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
-  const handleVerifyDelete = async () => {
-    if (!deleteOtp || deleteOtp.length < 4) {
-      setMessage({ type: 'error', text: 'Please enter a valid OTP' });
-      return;
-    }
-    setIsDeleting(true);
-    setMessage({ type: '', text: '' });
-    try {
-      await deleteAccountVerify({ otp: deleteOtp });
-      setMessage({ type: 'success', text: 'Your account has been deleted successfully.' });
-      setTimeout(async () => {
-        setShowDeleteModal(false);
-        await clearAuthToken();
-      }, 1500);
-    } catch (error) {
-      setMessage({ type: 'error', text: error?.response?.data?.error || error?.message || 'Verification failed' });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const role = user?.role || 'Tenant';
+  const name = user?.name || 'User';
 
   return (
-    <View style={{ flex: 1 }}>
-      <DrawerContentScrollView {...props}>
-        <DrawerItemList {...props} />
-        <DrawerItem
-          label="Add Property"
-          icon={({ size }) => <MaterialIcons name="add-circle" color="#2596be" size={size} />}
-          labelStyle={{ color: '#2596be', fontWeight: 'bold' }}
-          onPress={() => props.navigation.navigate('AddProperty')}
-        />
-        <DrawerItem
-          label="Logout"
-          icon={({ color, size }) => <MaterialIcons name="logout" color={color} size={size} />}
-          onPress={async () => {
-            await clearAuthToken();
-          }}
-        />
-        <DrawerItem
-          label={isSendingOtp ? "Sending OTP..." : "Remove Account"}
-          labelStyle={{ color: '#DC2626', fontWeight: 'bold' }}
-          icon={({ size }) => (
-            isSendingOtp ? <ActivityIndicator size="small" color="#DC2626" /> : <MaterialIcons name="delete-forever" color="#DC2626" size={size} />
-          )}
-          onPress={handleInitiateDelete}
-        />
-      </DrawerContentScrollView>
-
-      <Modal visible={showDeleteModal} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <MaterialIcons name="warning" size={28} color="#DC2626" />
-              <Text style={styles.modalTitle}>Remove Account?</Text>
-            </View>
-            <Text style={styles.modalBody}>
-              An OTP has been sent to your registered phone number. Enter it below to permanently delete your account.
-            </Text>
-            <TextInput
-              style={styles.otpInput}
-              placeholder="Enter OTP"
-              value={deleteOtp}
-              onChangeText={setDeleteOtp}
-              keyboardType="numeric"
-              maxLength={6}
-            />
-
-            {message.text ? (
-              <View style={[styles.messageBox, message.type === 'error' ? styles.errorBox : styles.successBox]}>
-                <MaterialIcons 
-                  name={message.type === 'error' ? "error-outline" : "check-circle-outline"} 
-                  size={20} 
-                  color={message.type === 'error' ? "#DC2626" : "#059669"} 
-                />
-                <Text style={[styles.messageText, message.type === 'error' ? styles.errorText : styles.successText]}>
-                  {message.text}
-                </Text>
-              </View>
-            ) : null}
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowDeleteModal(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.confirmDeleteButton} 
-                onPress={handleVerifyDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text style={styles.confirmDeleteText}>Confirm</Text>
-                )}
-              </TouchableOpacity>
+    <View style={styles.container}>
+      <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
+        {/* Profile Header */}
+        <View style={styles.header}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName} numberOfLines={1}>{name}</Text>
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleText}>{role.toUpperCase()}</Text>
             </View>
           </View>
         </View>
-      </Modal>
+
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Drawer Items */}
+        <View style={styles.drawerItemsContainer}>
+          <DrawerItemList {...props} />
+        </View>
+      </DrawerContentScrollView>
+
+      {/* Footer / Actions */}
+      <View style={styles.footer}>
+        <View style={styles.divider} />
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          activeOpacity={0.7}
+          onPress={async () => { await clearAuthToken(); }}
+        >
+          <View style={styles.footerIconContainer}>
+            <MaterialIcons name="logout" size={22} color="#4B5563" />
+          </View>
+          <Text style={styles.footerButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 16 },
-  modalContent: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 8 },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#18181B', marginLeft: 8, flex: 1 },
-  modalBody: { fontSize: 14, color: '#52525B', lineHeight: 20, marginBottom: 20 },
-  otpInput: { borderWidth: 1, borderColor: '#D4D4D8', borderRadius: 8, padding: 12, fontSize: 18, textAlign: 'center', marginBottom: 24, letterSpacing: 4, fontWeight: '700' },
-  modalActions: { flexDirection: 'row', gap: 12 },
-  cancelButton: { flex: 1, padding: 14, borderRadius: 8, alignItems: 'center', backgroundColor: '#F4F4F5' },
-  cancelButtonText: { color: '#52525B', fontWeight: '700', fontSize: 16 },
-  confirmDeleteButton: { flex: 1, padding: 14, borderRadius: 8, alignItems: 'center', backgroundColor: '#DC2626' },
-  confirmDeleteText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-  messageBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 12, borderRadius: 8, marginBottom: 16, borderWidth: 1 },
-  errorBox: { backgroundColor: '#FEE2E2', borderColor: '#F87171' },
-  successBox: { backgroundColor: '#D1FAE5', borderColor: '#34D399' },
-  messageText: { marginLeft: 8, fontSize: 14, fontWeight: '500', flexShrink: 1 },
-  errorText: { color: '#DC2626' },
-  successText: { color: '#059669' },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingTop: Platform.OS === 'android' ? 24 : 0,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 40,
+  },
+  avatarContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  avatarText: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  userInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  roleBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  roleText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#6B7280',
+    letterSpacing: 0.5,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  drawerItemsContainer: {
+    paddingHorizontal: 8,
+  },
+  footer: {
+    paddingBottom: 24,
+    paddingTop: 8,
+    paddingHorizontal: 16,
+  },
+  footerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  footerIconContainer: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  footerButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
 });
 
 export default CustomDrawerContent;

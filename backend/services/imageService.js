@@ -9,12 +9,19 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Function to upload image to Cloudinary
 const uploadImage = async (filePath, folder = 'rently') => {
   try {
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      console.warn('Cloudinary keys missing! Returning placeholder image.');
+      return {
+        public_id: 'placeholder_' + Date.now(),
+        url: 'https://via.placeholder.com/400x200?text=Property+Image',
+      };
+    }
+    
     const result = await cloudinary.uploader.upload(filePath, {
       folder: folder,
-      resource_type: 'auto', // auto-detect image type
+      resource_type: 'auto', 
     });
     return {
       public_id: result.public_id,

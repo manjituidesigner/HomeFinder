@@ -16,6 +16,20 @@ exports.getProperties = async (req, res) => {
   }
 };
 
+exports.getPropertyById = async (req, res) => {
+  try {
+    if (!db) return res.status(503).json({ error: 'Firebase not initialized' });
+    const doc = await db.collection('properties').doc(req.params.id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    res.status(500).json({ error: 'Failed to fetch property' });
+  }
+};
+
 exports.createProperty = async (req, res) => {
   try {
     if (!db) return res.status(503).json({ error: 'Firebase not initialized' });

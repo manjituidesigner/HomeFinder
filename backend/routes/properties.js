@@ -9,6 +9,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.get('/', propertyController.getProperties);
+router.get('/:id', propertyController.getPropertyById);
 router.post('/', upload.array('images', 10), propertyController.createProperty); // Allow up to 10 images
 router.put('/:id', propertyController.updateProperty);
 router.delete('/:id', propertyController.deleteProperty);
