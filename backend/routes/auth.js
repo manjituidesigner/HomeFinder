@@ -15,4 +15,8 @@ router.post('/reset-password', authController.resetPassword);
 // Login
 router.post('/login', authController.login);
 
+// Delete Account
+router.post('/delete-account-initiate', authController.deleteAccountInitiate);
+router.post('/delete-account-verify', authController.deleteAccountVerify);
+
 module.exports = router;

@@ -13,6 +13,7 @@ const LoginScreen = ({ navigation }) => {
   const [pin, setPin] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
@@ -26,27 +27,31 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (isSubmitting) return;
+    setMessage({ type: '', text: '' });
     setIsSubmitting(true);
     try {
       let payload;
       if (loginMethod === 'email') {
         const normalizedEmail = normalizeEmail(email);
         if (!normalizedEmail) {
-          Alert.alert('Invalid email', 'Enter your email address.');
+          setMessage({ type: 'error', text: 'Enter your email address.' });
+          setIsSubmitting(false);
           return;
         }
         payload = { email: normalizedEmail, pin: String(pin) };
       } else {
         const normalizedPhone = normalizeIndianPhone(countryCode, mobileNumber);
         if (!normalizedPhone) {
-          Alert.alert('Invalid phone', 'Enter 10-digit mobile number. Country code +91 is added automatically.');
+          setMessage({ type: 'error', text: 'Enter 10-digit mobile number. Country code +91 is added automatically.' });
+          setIsSubmitting(false);
           return;
         }
         payload = { phone: normalizedPhone, pin: String(pin) };
       }
 
       if (!pin || String(pin).length < 4) {
-        Alert.alert('Invalid PIN', 'Enter your 4-digit PIN.');
+        setMessage({ type: 'error', text: 'Enter your 4-digit PIN.' });
+        setIsSubmitting(false);
         return;
       }
 
@@ -55,13 +60,14 @@ const LoginScreen = ({ navigation }) => {
         throw new Error('Login succeeded but no token was returned by server.');
       }
 
+      setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
       await setAuthToken(res.token);
 
       // Do not navigate inside Auth stack after setting token.
       // AppNavigator will switch to the authenticated Drawer automatically.
     } catch (error) {
       const backendMessage = error?.response?.data?.error;
-      Alert.alert('Error', backendMessage || error?.message || 'Login failed');
+      setMessage({ type: 'error', text: backendMessage || error?.message || 'Login failed' });
     } finally {
       setIsSubmitting(false);
     }
@@ -154,6 +160,20 @@ const LoginScreen = ({ navigation }) => {
           </View>
         </View>
       </View>
+      
+      {message.text ? (
+        <View style={[styles.messageBox, message.type === 'error' ? styles.errorBox : styles.successBox]}>
+          <MaterialIcons 
+            name={message.type === 'error' ? "error-outline" : "check-circle-outline"} 
+            size={20} 
+            color={message.type === 'error' ? "#DC2626" : "#059669"} 
+          />
+          <Text style={[styles.messageText, message.type === 'error' ? styles.errorText : styles.successText]}>
+            {message.text}
+          </Text>
+        </View>
+      ) : null}
+
       <TouchableOpacity
         style={[styles.loginButton, isSubmitting && styles.loginButtonDisabled]}
         onPress={handleLogin}
@@ -360,6 +380,35 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     alignSelf: 'center',
     marginBottom: 8,
+  },
+  messageBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+  },
+  errorBox: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#F87171',
+  },
+  successBox: {
+    backgroundColor: '#D1FAE5',
+    borderColor: '#34D399',
+  },
+  messageText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    flexShrink: 1,
+  },
+  errorText: {
+    color: '#DC2626',
+  },
+  successText: {
+    color: '#059669',
   },
 });
 

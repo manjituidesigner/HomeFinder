@@ -195,3 +195,54 @@ exports.resetPassword = async (req, res) => {
     res.status(400).json({ error: 'Token expired or invalid' });
   }
 };
+// Delete Account Initiate
+exports.deleteAccountInitiate = async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Access denied' });
+    
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const userId = decoded.id;
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
+
+    const phone = userDoc.data().phone;
+    if (!phone) return res.status(400).json({ error: 'No phone number attached to this account' });
+
+    await sendOTP(phone);
+    res.json({ message: 'OTP sent to confirm account deletion', phone });
+  } catch (error) {
+    console.error('[Delete Account Initiate Error]:', error);
+    res.status(500).json({ error: 'Failed to initiate account deletion' });
+  }
+};
+
+// Delete Account Verify
+exports.deleteAccountVerify = async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Access denied' });
+    
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const userId = decoded.id;
+
+    const { otp } = req.body;
+    if (!otp) return res.status(400).json({ error: 'OTP is required' });
+
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
+    
+    const phone = userDoc.data().phone;
+    const isVerified = await verifyOTP(phone, otp);
+    if (!isVerified) return res.status(400).json({ error: 'Invalid or expired OTP' });
+
+    // OTP Verified, Delete the user document
+    await db.collection('users').doc(userId).delete();
+    
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('[Delete Account Verify Error]:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+};

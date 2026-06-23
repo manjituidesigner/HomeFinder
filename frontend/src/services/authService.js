@@ -31,6 +31,16 @@ export const resetPassword = async (payload) => {
   return res.data;
 };
 
+export const deleteAccountInitiate = async () => {
+  const res = await api.post('/auth/delete-account-initiate');
+  return res.data;
+};
+
+export const deleteAccountVerify = async (payload) => {
+  const res = await api.post('/auth/delete-account-verify', payload);
+  return res.data;
+};
+
 export const logout = async () => {
   // Mock logout
   return { message: 'Logged out' };

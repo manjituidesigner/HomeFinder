@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert, Modal, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { deleteAccountInitiate, deleteAccountVerify } from '../../services/authService';
+import { clearAuthToken } from '../../services/authStorage';
 
 const OwnerProfileScreen = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState(null);
@@ -181,6 +183,8 @@ const OwnerProfileScreen = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
+
+
 
       <View style={styles.footerWrap}>
         <View style={styles.footerShell}>
