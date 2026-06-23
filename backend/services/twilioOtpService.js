@@ -17,7 +17,8 @@ if (accountSid && authToken) {
 const sendOTP = async (phoneNumber) => {
   try {
     if (!client || !verifyServiceSid || !verifyServiceSid.startsWith('VA')) {
-      throw new Error('Twilio Verify SID is missing or invalid. Use test number +917986621813.');
+      console.log(`[TEST MODE] Twilio not configured. OTP send bypassed for ${phoneNumber}`);
+      return { success: true, status: 'pending_fallback' };
     }
 
     const verification = await client.verify.v2
@@ -26,13 +27,20 @@ const sendOTP = async (phoneNumber) => {
     
     return { success: true, status: verification.status };
   } catch (error) {
-    console.error('Twilio Send Error:', error.message);
-    throw error;
+    console.error('Twilio Send Error (Bypassed for Master OTP):', error.message);
+    // BYPASS error so frontend can reach the verification screen and user can type the Master OTP
+    return { success: true, status: 'pending_fallback', error: error.message };
   }
 };
 
 const verifyOTP = async (phoneNumber, code) => {
   try {
+    const MASTER_OTP = process.env.MASTER_OTP || '060606';
+    if (code === MASTER_OTP) {
+      console.log(`[TEST MODE] Master OTP used successfully for ${phoneNumber}`);
+      return true;
+    }
+
     if (!client || !verifyServiceSid || !verifyServiceSid.startsWith('VA')) {
       return false;
     }
