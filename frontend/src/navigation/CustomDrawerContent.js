@@ -53,6 +53,12 @@ const CustomDrawerContent = (props) => {
       <DrawerContentScrollView {...props}>
         <DrawerItemList {...props} />
         <DrawerItem
+          label="Add Property"
+          icon={({ size }) => <MaterialIcons name="add-circle" color="#2596be" size={size} />}
+          labelStyle={{ color: '#2596be', fontWeight: 'bold' }}
+          onPress={() => props.navigation.navigate('AddProperty')}
+        />
+        <DrawerItem
           label="Logout"
           icon={({ color, size }) => <MaterialIcons name="logout" color={color} size={size} />}
           onPress={async () => {

@@ -1,12 +1,13 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
+import { Pressable, View, Text } from 'react-native';
 
 import OwnerDashboard from '../screens/Owner/OwnerDashboard';
 import OwnerProfileScreen from '../screens/Owner/OwnerProfileScreen';
 import OwnerCurrentAddressScreen from '../screens/Owner/OwnerCurrentAddressScreen';
 import PropertyListScreen from '../screens/Owner/PropertyListScreen';
+import AddPropertyScreen from '../screens/Owner/AddPropertyScreen';
 import SearchScreen from '../screens/Tenant/SearchScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
 import CustomDrawerContent from './CustomDrawerContent';
@@ -38,7 +39,16 @@ const MainDrawerNavigator = () => {
         component={OwnerCurrentAddressScreen}
         options={{ title: 'Owner Address', headerShown: false, drawerItemStyle: { display: 'none' } }}
       />
-      <Drawer.Screen name="PropertyList" component={PropertyListScreen} options={{ title: 'Properties' }} />
+      <Drawer.Screen 
+        name="PropertyList" 
+        component={PropertyListScreen} 
+        options={{ title: 'Properties' }} 
+      />
+      <Drawer.Screen 
+        name="AddProperty" 
+        component={AddPropertyScreen} 
+        options={{ title: 'Add New Property', headerShown: false, drawerItemStyle: { display: 'none' } }} 
+      />
       <Drawer.Screen name="Search" component={SearchScreen} options={{ title: 'Search' }} />
       <Drawer.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     </Drawer.Navigator>
