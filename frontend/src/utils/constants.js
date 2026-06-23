@@ -5,9 +5,9 @@ const ENV_API_URL = process.env.EXPO_PUBLIC_API_URL || process.env.REACT_APP_API
 
 const getDevApiUrl = () => {
   if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:3002/api';
+    return 'http://10.0.2.2:3001/api';
   }
-  return 'http://localhost:3002/api';
+  return 'http://localhost:3001/api';
 };
 
 const DEFAULT_DEV_API_URL = getDevApiUrl();

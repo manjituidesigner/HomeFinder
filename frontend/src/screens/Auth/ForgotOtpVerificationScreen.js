@@ -5,9 +5,11 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { forgotPasswordInitiate, forgotPasswordVerifyOtp } from '../../services/authService';
 
 const ForgotOtpVerificationScreen = ({ navigation, route }) => {
-  const OTP_LENGTH = 4;
+  const OTP_LENGTH = 6;
   const [otpCode, setOtpCode] = useState(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(45);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [isVerifying, setIsVerifying] = useState(false);
   const otpRefs = Array.from({ length: OTP_LENGTH }, () => useRef());
 
   const { forgotPayload } = route.params || {};
@@ -43,11 +45,15 @@ const ForgotOtpVerificationScreen = ({ navigation, route }) => {
   };
 
   const handleVerifyOTP = async () => {
+    if (isVerifying) return;
+    setMessage({ type: '', text: '' });
+
     if (otpCode.includes('')) {
-      Alert.alert('Error', 'Please enter the complete OTP');
+      setMessage({ type: 'error', text: 'Please enter the complete 6-digit OTP' });
       return;
     }
     const code = otpCode.join('');
+    setIsVerifying(true);
     try {
       const normalizedPhone = normalizePhoneForApi(forgotPayload?.phone);
       const res = await forgotPasswordVerifyOtp({
@@ -55,9 +61,15 @@ const ForgotOtpVerificationScreen = ({ navigation, route }) => {
         otpVia,
         otp: code,
       });
-      navigation.navigate('ResetPassword', { email: res.email, phone: res.phone, resetToken: res.resetToken });
+      
+      setMessage({ type: 'success', text: 'OTP verified successfully! Redirecting...' });
+      setTimeout(() => {
+        navigation.navigate('ResetPassword', { email: res.email, phone: res.phone, resetToken: res.resetToken });
+      }, 1500);
     } catch (error) {
-      Alert.alert('Error', error?.response?.data?.error || error?.message || 'OTP verification failed');
+      setMessage({ type: 'error', text: error?.response?.data?.error || error?.message || 'OTP verification failed' });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -138,10 +150,28 @@ const ForgotOtpVerificationScreen = ({ navigation, route }) => {
             <Text style={styles.timerText}>{`00:${timer.toString().padStart(2, '0')}`}</Text>
           </View>
         </View>
+        
+        {message.text ? (
+          <View style={[styles.messageBox, message.type === 'error' ? styles.errorBox : styles.successBox]}>
+            <MaterialIcons 
+              name={message.type === 'error' ? "error-outline" : "check-circle-outline"} 
+              size={20} 
+              color={message.type === 'error' ? "#DC2626" : "#059669"} 
+            />
+            <Text style={[styles.messageText, message.type === 'error' ? styles.errorText : styles.successText]}>
+              {message.text}
+            </Text>
+          </View>
+        ) : null}
       </View>
       <View style={styles.bottom}>
-        <TouchableOpacity style={styles.verifyButton} onPress={handleVerifyOTP} activeOpacity={0.8}>
-          <Text style={styles.verifyText}>Verify</Text>
+        <TouchableOpacity 
+          style={[styles.verifyButton, isVerifying && { opacity: 0.7 }]} 
+          onPress={handleVerifyOTP} 
+          activeOpacity={0.8}
+          disabled={isVerifying}
+        >
+          <Text style={styles.verifyText}>{isVerifying ? 'Verifying...' : 'Verify'}</Text>
         </TouchableOpacity>
         <View style={styles.keypad}>
           {[1,2,3,4,5,6,7,8,9,'',0,'backspace'].map((key, index) => (
@@ -204,16 +234,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   otpInput: {
-    width: 48,
+    width: 42,
     height: 56,
     borderWidth: 2,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
+    borderRadius: 10,
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
     color: '#140d1b',
-    marginHorizontal: 8,
+    marginHorizontal: 4,
     backgroundColor: '#FFFFFF',
   },
   footer: {
@@ -297,6 +327,35 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     alignSelf: 'center',
     marginBottom: 8,
+  },
+  messageBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  errorBox: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#F87171',
+  },
+  successBox: {
+    backgroundColor: '#D1FAE5',
+    borderColor: '#34D399',
+  },
+  messageText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    flexShrink: 1,
+  },
+  errorText: {
+    color: '#DC2626',
+  },
+  successText: {
+    color: '#059669',
   },
 });
 

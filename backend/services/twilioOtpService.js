@@ -16,12 +16,6 @@ if (accountSid && authToken) {
 
 const sendOTP = async (phoneNumber) => {
   try {
-    // TEST MODE BYPASS
-    if (phoneNumber === '+917986621813' || phoneNumber === '+1111111111') {
-      console.log(`[TEST MODE] OTP send bypassed for ${phoneNumber}`);
-      return { success: true, message: 'OTP sent (Test Mode)' };
-    }
-
     if (!client || !verifyServiceSid || !verifyServiceSid.startsWith('VA')) {
       throw new Error('Twilio Verify SID is missing or invalid. Use test number +917986621813.');
     }
@@ -39,12 +33,6 @@ const sendOTP = async (phoneNumber) => {
 
 const verifyOTP = async (phoneNumber, code) => {
   try {
-    // TEST MODE BYPASS
-    if ((phoneNumber === '+917986621813' || phoneNumber === '+1111111111') && code === '1234') {
-      console.log(`[TEST MODE] OTP verification bypassed for ${phoneNumber}`);
-      return true;
-    }
-
     if (!client || !verifyServiceSid || !verifyServiceSid.startsWith('VA')) {
       return false;
     }

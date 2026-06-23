@@ -5,7 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { verifySignupOtp, forgotPasswordVerifyOtp, register, forgotPasswordInitiate } from '../../services/authService';
 
 const OtpVerificationScreen = ({ navigation, route }) => {
-  const OTP_LENGTH = 4;
+  const OTP_LENGTH = 6;
   const [otpCode, setOtpCode] = useState(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(45);
   const otpRefs = Array.from({ length: OTP_LENGTH }, () => useRef());
@@ -246,16 +246,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   otpInput: {
-    width: 48,
+    width: 42,
     height: 56,
     borderWidth: 2,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
+    borderRadius: 10,
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
     color: '#140d1b',
-    marginHorizontal: 8,
+    marginHorizontal: 4,
     backgroundColor: '#FFFFFF',
   },
   footer: {
