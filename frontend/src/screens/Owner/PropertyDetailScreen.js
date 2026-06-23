@@ -5,6 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { deleteProperty, getPropertyById } from '../../services/propertyService';
 import { useFocusEffect } from '@react-navigation/native';
 
+import PropertyChatTab from './tabs/PropertyChatTab';
+import PropertyHistoryTab from './tabs/PropertyHistoryTab';
+
 const { width } = Dimensions.get('window');
 
 // Colors from the Tailwind config
@@ -29,6 +32,7 @@ const PropertyDetailScreen = ({ route, navigation }) => {
   const [property, setProperty] = useState(initialProperty || null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('Info');
 
   useFocusEffect(
     useCallback(() => {
@@ -37,7 +41,12 @@ const PropertyDetailScreen = ({ route, navigation }) => {
         setLoading(true);
         getPropertyById(property.id)
           .then(data => {
-            if (isActive && data) setProperty(data);
+            if (isActive && data) {
+              if (!data.name && Platform.OS === 'web') {
+                console.log("FETCHED DATA IS MISSING NAME:", data);
+              }
+              setProperty(data);
+            }
           })
           .catch(err => console.error('Failed to refetch property details:', err))
           .finally(() => {
@@ -148,6 +157,21 @@ const PropertyDetailScreen = ({ route, navigation }) => {
     return 'check-circle-outline';
   };
 
+  const renderTabBar = () => (
+    <View style={styles.tabBar}>
+      {['Info', 'Chat', 'History'].map(tab => (
+        <TouchableOpacity
+          key={tab}
+          style={[styles.tabItem, activeTab === tab && styles.tabItemActive]}
+          onPress={() => setActiveTab(tab)}
+        >
+          <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+          {activeTab === tab && <View style={styles.activeTabIndicator} />}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -168,37 +192,15 @@ const PropertyDetailScreen = ({ route, navigation }) => {
 
         <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           
-          {/* Hero Image Slider */}
-          <View style={styles.sliderContainer}>
-            <ScrollView 
-              horizontal 
-              pagingEnabled 
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={onScroll}
-              style={styles.slider}
-            >
-              {images.map((img, index) => (
-                <View key={index} style={styles.slide}>
-                  <Image source={{ uri: img }} style={styles.slideImage} />
-                </View>
-              ))}
-            </ScrollView>
-            
-            {/* Pagination / Slide Count */}
-            <View style={styles.slideCountBadge}>
-              <Text style={styles.slideCountText}>{activeSlide + 1} / {images.length}</Text>
-            </View>
-            <View style={styles.paginationDots}>
-              {images.map((_, i) => (
-                <View key={i} style={[styles.dot, i === activeSlide ? styles.dotActive : null]} />
-              ))}
-            </View>
-          </View>
+          {/* Tab Navigation */}
+          {renderTabBar()}
 
           <View style={styles.contentPadding}>
             
-            {/* Price and Title Section */}
-            <View style={[styles.card, styles.titleCard]}>
+            {activeTab === 'Info' && (
+              <>
+                {/* Price and Title Section */}
+                <View style={[styles.card, styles.titleCard]}>
               <View style={styles.titleRow}>
                 <View style={styles.titleInfo}>
                   <Text style={styles.propertyTitle}>{property.name || 'Unnamed Property'}</Text>
@@ -410,30 +412,38 @@ const PropertyDetailScreen = ({ route, navigation }) => {
               </View>
             </View>
 
+              </>
+            )}
+
+            {activeTab === 'Chat' && <PropertyChatTab />}
+            {activeTab === 'History' && <PropertyHistoryTab />}
+
           </View>
         </ScrollView>
 
-        {/* Sticky Bottom Actions */}
-        <View style={styles.bottomActions}>
-          <TouchableOpacity 
-            activeOpacity={0.8} 
-            style={styles.editButtonWrapper}
-            onPress={() => navigation.navigate('AddProperty', { editProperty: property })}
-          >
-            <LinearGradient
-              colors={[colors.primaryGradientStart, colors.primaryGradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.editButton}
+        {/* Sticky Bottom Actions - Only visible on Info tab */}
+        {activeTab === 'Info' && (
+          <View style={styles.bottomActions}>
+            <TouchableOpacity 
+              activeOpacity={0.8} 
+              style={styles.editButtonWrapper}
+              onPress={() => navigation.navigate('AddProperty', { editProperty: property })}
             >
-              <MaterialIcons name="edit" size={22} color="#FFF" />
-              <Text style={styles.editButtonText}>Edit Property</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7} style={styles.deleteButton} onPress={handleDelete}>
-            <MaterialIcons name="delete" size={24} color={colors.error} />
-          </TouchableOpacity>
-        </View>
+              <LinearGradient
+                colors={[colors.primaryGradientStart, colors.primaryGradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.editButton}
+              >
+                <MaterialIcons name="edit" size={22} color="#FFF" />
+                <Text style={styles.editButtonText}>Edit Property</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.7} style={styles.deleteButton} onPress={handleDelete}>
+              <MaterialIcons name="delete" size={24} color={colors.error} />
+            </TouchableOpacity>
+          </View>
+        )}
 
       </View>
     </SafeAreaView>
@@ -646,6 +656,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.onSurfaceVariant,
     lineHeight: 24,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceLowest,
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  tabItem: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    position: 'relative',
+  },
+  tabItemActive: {
+    backgroundColor: colors.surfaceHigh,
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.outline,
+  },
+  tabTextActive: {
+    color: colors.primary,
+  },
+  activeTabIndicator: {
+    position: 'absolute',
+    bottom: -4,
+    left: '20%',
+    right: '20%',
+    height: 3,
+    backgroundColor: colors.primary,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+    display: 'none', // Alternatively, you can use this for a different style indicator
   },
   amenitiesGrid: {
     flexDirection: 'row',
