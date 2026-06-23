@@ -29,14 +29,7 @@ const allowedOrigins = [...new Set([...envOrigins, ...defaultDevOrigins])];
 
 app.use(
   cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      if (origin.endsWith('.app.github.dev') || origin.endsWith('.githubpreview.dev')) {
-        return cb(null, true);
-      }
-      if (allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error(`CORS blocked for origin: ${origin}`));
-    },
+    origin: true,
     credentials: true,
   })
 );

@@ -121,7 +121,7 @@ const AddPropertyScreen = ({ navigation }) => {
       navigation.goBack(); 
     } catch (err) {
       console.error(err);
-      alert('Failed to publish property.');
+      alert('Failed to publish property: ' + (err.message || err.toString()));
     } finally {
       setIsPublishing(false);
     }
