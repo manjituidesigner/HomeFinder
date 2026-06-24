@@ -1,6 +1,6 @@
-// Register Screen with Steps
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { register } from '../../services/authService';
 
@@ -25,17 +25,14 @@ const RegisterScreen = ({ navigation }) => {
   }, [step]);
 
   const handleNext = () => {
-    console.log('handleNext clicked, current step:', step);
     if (step === 1) {
-      // Validate step 1
       if (!formData.name || !formData.phone || !formData.pin) {
-        Alert.alert('Error', 'Please enter your name, phone, and PIN');
+        setErrorMessage('Please enter your name, phone, and PIN');
         return;
       }
-      console.log('Step 1 validation passed, moving to step 2');
+      setErrorMessage('');
       setStep(2);
     } else if (step === 2) {
-      console.log('Step 2: Registering user...');
       handleRegister();
     }
   };
@@ -45,7 +42,6 @@ const RegisterScreen = ({ navigation }) => {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      console.log('Starting handleRegister with data:', formData);
       const trimmedEmail = String(formData.email || '').trim();
       const hasEmail = trimmedEmail.length > 0;
       const hasPhone = String(formData.phone || '').trim().length > 0;
@@ -59,7 +55,6 @@ const RegisterScreen = ({ navigation }) => {
       const normalizedCountryCode = String(countryCode).trim();
       const normalizedLocalPhone = String(formData.phone).trim();
       const combinedPhone = `${normalizedCountryCode}${normalizedLocalPhone}`;
-      console.log('Combined phone:', combinedPhone);
 
       const userData = {
         name: formData.name,
@@ -70,9 +65,7 @@ const RegisterScreen = ({ navigation }) => {
         otpVia: 'sms',
       };
 
-      console.log('Calling register API with:', userData);
       const res = await register(userData);
-      console.log('API Response received:', res);
       
       navigation.navigate('OtpVerification', { 
         from: 'register', 
@@ -80,8 +73,7 @@ const RegisterScreen = ({ navigation }) => {
         otpVia: res?.otpVia || 'sms' 
       });
     } catch (error) {
-      console.log('Registration ERROR:', error);
-      const errorMsg = error?.response?.data?.error || error?.message || 'Registration failed. Server might be unreachable.';
+      const errorMsg = error?.response?.data?.error || error?.message || 'Registration failed.';
       setErrorMessage(errorMsg);
     } finally {
       setIsLoading(false);
@@ -94,358 +86,374 @@ const RegisterScreen = ({ navigation }) => {
 
   if (step === 4) {
     return (
-      <View style={styles.successContainer}>
-        <View style={styles.iconContainer}>
-          <MaterialIcons name="check-circle" size={80} color="#8B5CF6" />
+      <LinearGradient colors={['#eef2ff', '#e0e7ff', '#faf5ff']} style={styles.container}>
+        <View style={styles.successContainer}>
+          <View style={styles.iconContainer}>
+            <MaterialIcons name="check-circle" size={80} color="#8B5CF6" />
+          </View>
+          <Text style={styles.successTitle}>Registration Successful</Text>
+          <Text style={styles.successText}>
+            Thank you for joining our community. Your property management journey starts now.
+          </Text>
+          <TouchableOpacity style={styles.getStartedButton} onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.getStartedText}>Get Started</Text>
+            <MaterialIcons name="arrow-forward" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-        <Text style={styles.successTitle}>Registration Successful</Text>
-        <Text style={styles.successText}>
-          Thank you for joining our community. Your property management journey starts now.
-        </Text>
-        <TouchableOpacity style={styles.getStartedButton} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.getStartedText}>Get Started</Text>
-          <MaterialIcons name="arrow-forward" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.viewProfileButton}>
-          <Text style={styles.viewProfileText}>View my profile</Text>
-        </TouchableOpacity>
-        <View style={styles.indicator} />
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <ScrollView style={styles.scrollView} contentContainerStyle={styles.container} key={step} ref={scrollViewRef}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => step === 1 ? navigation.goBack() : setStep(1)}>
-          <MaterialIcons name="arrow-back-ios-new" size={24} color="#140d1b" />
-        </TouchableOpacity>
-      </View>
+    <LinearGradient colors={['#eef2ff', '#e0e7ff', '#faf5ff']} style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardView} 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false} ref={scrollViewRef}>
+          <View style={styles.card}>
+            {step === 1 && (
+              <>
+                <View style={styles.titleContainer}>
+                  <Text style={styles.title}>Join Us Today</Text>
+                  <Text style={styles.subtitle}>
+                    Create your account to start managing or renting properties seamlessly.
+                  </Text>
+                </View>
 
-      {step === 1 && (
-        <>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Join Us Today</Text>
-            <Text style={styles.subtitle}>
-              Create your account to start managing or renting properties seamlessly.
-            </Text>
-          </View>
-
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="John Doe"
-                value={formData.name}
-                onChangeText={(text) => setFormData({ ...formData, name: text })}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Mobile Number</Text>
-              <View style={styles.phoneRow}>
-                <TextInput
-                  style={styles.countryCodeInput}
-                  placeholder="+91"
-                  value={countryCode}
-                  onChangeText={(text) => setCountryCode(text)}
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                />
-                <TextInput
-                  style={styles.phoneInput}
-                  placeholder="Enter Your Phone Number"
-                  value={formData.phone}
-                  onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                  keyboardType="phone-pad"
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="name@example.com"
-                value={formData.email}
-                onChangeText={(text) => setFormData({ ...formData, email: text })}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <View style={styles.pinHeader}>
-                <Text style={styles.label}>Set 6-Digit PIN</Text>
-                <MaterialIcons name="info" size={18} color="#9CA3AF" />
-              </View>
-              <TextInput
-                style={styles.pinInput}
-                placeholder="Enter Your Login Pin"
-                value={formData.pin}
-                onChangeText={(text) => setFormData({ ...formData, pin: text })}
-                keyboardType="numeric"
-                maxLength={6}
-                secureTextEntry
-              />
-              <Text style={styles.pinHint}>Used for quick and secure access to your account.</Text>
-            </View>
-          </View>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Choose Your Path</Text>
-            <Text style={styles.subtitle}>
-              Select the account type that best describes you to personalize your experience.
-            </Text>
-          </View>
-
-          <View style={styles.rolesContainer}>
-            {[
-              { key: 'tenant', label: 'Tenant', desc: 'I am renting a property', icon: 'key', color: '#8B5CF6' },
-              { key: 'owner', label: 'Owner', desc: 'I own/manage properties', icon: 'apartment', color: '#3B82F6' },
-              { key: 'broker', label: 'Broker', desc: 'I facilitate transactions', icon: 'handshake', color: '#10B981' },
-              { key: 'admin', label: 'Admin', desc: 'I manage the platform', icon: 'admin-panel-settings', color: '#F59E0B' },
-            ].map((role) => (
-              <TouchableOpacity
-                key={role.key}
-                style={[
-                  styles.roleCard,
-                  formData.role === role.key && styles.selectedRole,
-                ]}
-                onPress={() => selectRole(role.key)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.roleHeader}>
-                  <View style={[styles.roleIcon, { backgroundColor: role.color + '20' }]}>
-                    <MaterialIcons name={role.icon} size={28} color={role.color} />
+                {errorMessage ? (
+                  <View style={styles.errorContainer}>
+                    <MaterialIcons name="error-outline" size={18} color="#DC2626" />
+                    <Text style={styles.errorText}>{errorMessage}</Text>
                   </View>
-                  {formData.role === role.key && (
-                    <View style={styles.checkIcon}>
-                      <MaterialIcons name="check" size={14} color="#FFFFFF" />
+                ) : null}
+
+                <View style={styles.form}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Full Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="John Doe"
+                      placeholderTextColor="#94A3B8"
+                      value={formData.name}
+                      onChangeText={(text) => setFormData({ ...formData, name: text })}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Mobile Number</Text>
+                    <View style={styles.phoneRow}>
+                      <View style={styles.countryCodeContainer}>
+                        <TextInput
+                          style={styles.countryCodeText}
+                          placeholder="+91"
+                          placeholderTextColor="#94A3B8"
+                          value={countryCode}
+                          onChangeText={(text) => setCountryCode(text)}
+                          keyboardType="phone-pad"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                      <TextInput
+                        style={[styles.input, styles.mobileInput]}
+                        placeholder="00000 00000"
+                        placeholderTextColor="#94A3B8"
+                        value={formData.phone}
+                        onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                        keyboardType="phone-pad"
+                      />
                     </View>
-                  )}
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Email Address</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="name@example.com"
+                      placeholderTextColor="#94A3B8"
+                      value={formData.email}
+                      onChangeText={(text) => setFormData({ ...formData, email: text })}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <View style={styles.pinHeader}>
+                      <Text style={styles.label}>Set 6-Digit PIN</Text>
+                      <MaterialIcons name="info-outline" size={16} color="#94A3B8" />
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter 6-digit PIN"
+                      placeholderTextColor="#94A3B8"
+                      value={formData.pin}
+                      onChangeText={(text) => setFormData({ ...formData, pin: text })}
+                      keyboardType="numeric"
+                      maxLength={6}
+                      secureTextEntry
+                    />
+                  </View>
                 </View>
-                <View style={styles.roleContent}>
-                  <Text style={styles.roleTitle}>{role.label}</Text>
-                  <Text style={styles.roleDesc}>{role.desc}</Text>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <View style={styles.titleContainer}>
+                  <Text style={styles.title}>Choose Your Path</Text>
+                  <Text style={styles.subtitle}>
+                    Select the account type that best describes you.
+                  </Text>
                 </View>
-              </TouchableOpacity>
-            ))}
+
+                {errorMessage ? (
+                  <View style={styles.errorContainer}>
+                    <MaterialIcons name="error-outline" size={18} color="#DC2626" />
+                    <Text style={styles.errorText}>{errorMessage}</Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.rolesContainer}>
+                  {[
+                    { key: 'tenant', label: 'Tenant', desc: 'I am renting a property', icon: 'key', color: '#8B5CF6' },
+                    { key: 'owner', label: 'Owner', desc: 'I own/manage properties', icon: 'apartment', color: '#3B82F6' },
+                    { key: 'broker', label: 'Broker', desc: 'I facilitate transactions', icon: 'handshake', color: '#10B981' },
+                    { key: 'admin', label: 'Admin', desc: 'I manage the platform', icon: 'admin-panel-settings', color: '#F59E0B' },
+                  ].map((role) => (
+                    <TouchableOpacity
+                      key={role.key}
+                      style={[
+                        styles.roleCard,
+                        formData.role === role.key && styles.selectedRole,
+                      ]}
+                      onPress={() => selectRole(role.key)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.roleIcon, { backgroundColor: role.color + '15' }]}>
+                        <MaterialIcons name={role.icon} size={24} color={role.color} />
+                      </View>
+                      <View style={styles.roleContent}>
+                        <Text style={styles.roleTitle}>{role.label}</Text>
+                        <Text style={styles.roleDesc}>{role.desc}</Text>
+                      </View>
+                      {formData.role === role.key && (
+                        <MaterialIcons name="check-circle" size={20} color={role.color} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
+            <View style={styles.footer}>
+              <View style={styles.actionButtonsRow}>
+                {step === 2 && (
+                  <TouchableOpacity 
+                    style={styles.backButton} 
+                    onPress={() => setStep(1)}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialIcons name="arrow-back" size={20} color="#64748B" />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity 
+                  style={[styles.nextButton, isLoading && { opacity: 0.7 }, step === 2 && { flex: 1 }]} 
+                  onPress={handleNext} 
+                  activeOpacity={0.8}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.nextText}>
+                    {isLoading ? 'Processing...' : (step === 1 ? 'Next Step' : 'Complete Registration')}
+                  </Text>
+                  {step === 1 && !isLoading && <MaterialIcons name="arrow-forward" size={20} color="#FFF" style={{ marginLeft: 8 }} />}
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.loginContainer}>
+                <Text style={styles.loginText}>
+                  Already have an account?{' '}
+                  <Text style={styles.loginLink} onPress={() => navigation.navigate('Login')}>
+                    Log in
+                  </Text>
+                </Text>
+              </View>
+            </View>
           </View>
-        </>
-      )}
-
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.nextButton, isLoading && { opacity: 0.7 }]} 
-          onPress={handleNext} 
-          activeOpacity={0.8}
-          disabled={isLoading}
-        >
-          <Text style={styles.nextText}>
-            {isLoading ? 'Processing...' : (step === 1 ? 'Next' : 'Register')}
-          </Text>
-        </TouchableOpacity>
-        
-        {errorMessage ? (
-          <View style={styles.errorContainer}>
-            <MaterialIcons name="error-outline" size={20} color="#DC2626" />
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>
-            Already have an account?{' '}
-            <Text style={styles.loginLink} onPress={() => navigation.navigate('Login')}>
-              Log in
-            </Text>
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.indicator} />
-    </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
-
 };
 
+const fontFamilyInter = Platform.OS === 'web' ? '"Inter", sans-serif' : 'System';
+
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    backgroundColor: '#F5F3FF',
-  },
   container: {
-    paddingHorizontal: 24,
-    paddingBottom: 48,
+    flex: 1,
   },
-  header: {
-    paddingTop: 24,
-    paddingBottom: 16,
+  keyboardView: {
+    flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderRadius: 16,
+    padding: 32,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   titleContainer: {
-    marginBottom: 32,
+    marginBottom: 24,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontFamily: fontFamilyInter,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#140d1b',
-    lineHeight: 38.4,
+    color: '#0F172A',
+    marginBottom: 6,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontFamily: fontFamilyInter,
+    fontSize: 14,
     fontWeight: '400',
-    color: '#6B7280',
-    marginTop: 8,
-    lineHeight: 22.4,
+    color: '#64748B',
+    textAlign: 'center',
   },
   form: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   inputGroup: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
+    fontFamily: fontFamilyInter,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#140d1b',
-    marginBottom: 8,
-    marginLeft: 4,
+    color: '#334155',
+    marginBottom: 6,
   },
   input: {
-    height: 56,
+    fontFamily: fontFamilyInter,
+    height: 48,
     paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 16,
-    fontSize: 16,
-    color: '#140d1b',
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    fontSize: 14,
+    color: '#0F172A',
   },
   phoneRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
-  countryCodeInput: {
-    height: 56,
-    width: 92,
-    paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB',
+  countryCodeContainer: {
+    height: 48,
+    width: 80,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 16,
-    fontSize: 16,
-    color: '#140d1b',
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  phoneInput: {
+  countryCodeText: {
+    fontFamily: fontFamilyInter,
+    fontSize: 14,
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  mobileInput: {
     flex: 1,
-    height: 56,
-    paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 16,
-    fontSize: 16,
-    color: '#140d1b',
   },
   pinHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginLeft: 4,
-    marginRight: 4,
-  },
-  pinInput: {
-    height: 56,
-    paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 16,
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#140d1b',
-    letterSpacing: 8,
-    textAlign: 'center',
-  },
-  pinHint: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 8,
-    marginLeft: 4,
+    marginBottom: 6,
   },
   rolesContainer: {
-    marginBottom: 32,
+    marginBottom: 16,
   },
   roleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
     backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    marginBottom: 12,
   },
   selectedRole: {
     borderColor: '#8B5CF6',
-    backgroundColor: '#8B5CF620',
-  },
-  roleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flex: 1,
+    backgroundColor: '#8B5CF60A',
+    borderWidth: 2,
   },
   roleIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#8B5CF6',
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   roleContent: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 12,
   },
   roleTitle: {
-    fontSize: 18,
+    fontFamily: fontFamilyInter,
+    fontSize: 15,
     fontWeight: '700',
-    color: '#140d1b',
+    color: '#0F172A',
   },
   roleDesc: {
-    fontSize: 14,
+    fontFamily: fontFamilyInter,
+    fontSize: 12,
     fontWeight: '500',
-    color: '#6B7280',
-    marginTop: 4,
+    color: '#64748B',
+    marginTop: 2,
   },
   footer: {
-    marginTop: 'auto',
-    paddingBottom: 48,
-    paddingTop: 16,
+    alignItems: 'center',
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    marginBottom: 24,
+    gap: 12,
+  },
+  backButton: {
+    height: 52,
+    width: 52,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   nextButton: {
-    height: 64,
+    flex: 1,
+    height: 52,
     backgroundColor: '#8B5CF6',
-    borderRadius: 32,
+    borderRadius: 12,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#8B5CF6',
@@ -455,47 +463,86 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   nextText: {
-    fontSize: 18,
+    fontFamily: fontFamilyInter,
+    fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   loginContainer: {
     alignItems: 'center',
-    marginTop: 16,
   },
   loginText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontFamily: fontFamilyInter,
+    fontSize: 13,
+    color: '#64748B',
   },
   loginLink: {
     color: '#8B5CF6',
-    fontWeight: '600',
-  },
-  indicator: {
-    width: 128,
-    height: 6,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 3,
-    alignSelf: 'center',
-    marginBottom: 8,
+    fontWeight: '700',
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FEF2F2',
     padding: 12,
     borderRadius: 8,
-    marginTop: 16,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#F87171',
+    borderColor: '#FECACA',
+    width: '100%',
   },
   errorText: {
+    fontFamily: fontFamilyInter,
     color: '#DC2626',
     marginLeft: 8,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
     flexShrink: 1,
+  },
+  successContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  iconContainer: {
+    marginBottom: 24,
+  },
+  successTitle: {
+    fontFamily: fontFamilyInter,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  successText: {
+    fontFamily: fontFamilyInter,
+    fontSize: 15,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 22,
+  },
+  getStartedButton: {
+    height: 52,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  getStartedText: {
+    fontFamily: fontFamilyInter,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginRight: 8,
   },
 });
 

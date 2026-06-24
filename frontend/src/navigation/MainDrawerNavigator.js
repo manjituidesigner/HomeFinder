@@ -63,7 +63,7 @@ export const TenantDrawerNavigator = () => {
       screenOptions={commonScreenOptions}
       backBehavior="history"
     >
-      <Drawer.Screen name="TenantDashboard" component={SearchScreen} options={{ title: 'Search Properties', drawerIcon: ({color, size}) => <MaterialIcons name="search" size={size} color={color} /> }} />
+      <Drawer.Screen name="TenantDashboard" component={SearchScreen} options={{ title: 'Search Properties', headerShown: false, drawerIcon: ({color, size}) => <MaterialIcons name="search" size={size} color={color} /> }} />
       <Drawer.Screen name="TenantProfile" component={OwnerProfileScreen} options={{ headerShown: false, title: 'My Profile', drawerIcon: ({color, size}) => <MaterialIcons name="person" size={size} color={color} /> }} />
       <Drawer.Screen name="TenantFavorite" component={ComingSoonScreen} options={{ title: 'Favorite', drawerIcon: ({color, size}) => <MaterialIcons name="favorite" size={size} color={color} /> }} />
       <Drawer.Screen name="TenantBid" component={ComingSoonScreen} options={{ title: 'Bid', drawerIcon: ({color, size}) => <MaterialIcons name="gavel" size={size} color={color} /> }} />
@@ -72,6 +72,11 @@ export const TenantDrawerNavigator = () => {
       <Drawer.Screen name="TenantPayments" component={ComingSoonScreen} options={{ title: 'Payments', drawerIcon: ({color, size}) => <MaterialIcons name="payment" size={size} color={color} /> }} />
       <Drawer.Screen name="TenantHistory" component={ComingSoonScreen} options={{ title: 'History', drawerIcon: ({color, size}) => <MaterialIcons name="history" size={size} color={color} /> }} />
       <Drawer.Screen name="TenantAccounts" component={ComingSoonScreen} options={{ title: 'Accounts', drawerIcon: ({color, size}) => <MaterialIcons name="account-circle" size={size} color={color} /> }} />
+      <Drawer.Screen 
+        name="PropertyDetails" 
+        component={PropertyDetailScreen} 
+        options={{ headerShown: false, drawerItemStyle: { display: 'none' } }} 
+      />
       <Drawer.Screen name="Settings" component={SettingsScreen} options={{ drawerItemStyle: { display: 'none' } }} />
     </Drawer.Navigator>
   );

@@ -179,7 +179,7 @@ const PropertyDetailScreen = ({ route, navigation }) => {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.iconButton} 
-            onPress={() => navigation.navigate('OwnerProperties')}
+            onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
             <MaterialIcons name="arrow-back" size={24} color={colors.primary} />
